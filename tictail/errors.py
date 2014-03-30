@@ -24,8 +24,11 @@ class ApiError(Exception):
         self.status = status
         self.response = response
 
-    def __str__(self):
+    def __repr__(self):
         return "{} ({}): {}".format(self.message, self.status, self.response)
+
+    def __str__(self):
+        return repr(self)
 
 
 class ValidationError(ApiError):
