@@ -3,6 +3,7 @@ tictail.client
 ~~~~~~~~~~~~~~
 
 """
+
 import copy
 
 from .transport import RequestsHttpTransport

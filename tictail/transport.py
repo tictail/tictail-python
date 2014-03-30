@@ -191,7 +191,6 @@ class RequestsHttpTransport(object):
             content = resp.json()
             return content, resp.status_code
         except ConnectionError as ce:
-            print ce
             self._handle_connection_error(ce)
         except HTTPError as he:
             self._handle_http_error(he)
