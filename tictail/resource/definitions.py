@@ -74,7 +74,7 @@ class Stores(Collection):
 
 
 class Me(Collection):
-    """This is a convenient alias to the /stores collection, that returns the
+    """This is a convenient alias to the /stores collection that returns the
     currently authenticated store without needing an identifier.
 
     """

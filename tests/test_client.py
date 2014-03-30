@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import pytest
 
 from tictail import Tictail
@@ -17,23 +19,28 @@ class TestClient(object):
         assert self.client.config is not None
         assert self.client.config == DEFAULT_CONFIG
 
+    def test_make_transport(self):
+        transport = self.client._make_transport()
+        assert transport.config == DEFAULT_CONFIG
+        assert transport.access_token == 'test'
+
     def test_make_config(self):
         config = self.client._make_config({
-            'api_version': 2,
-            'base_url': 'test.foo.bar'
+            'version': 2,
+            'base': 'test.foo.bar'
         })
-        assert config['api_version'] == 2
-        assert config['base_url'] == 'test.foo.bar'
+        assert config['version'] == 2
+        assert config['base'] == 'test.foo.bar'
 
         config = self.client._make_config(None)
         assert config == DEFAULT_CONFIG
 
     def test_config_override_via_constructor(self):
         client = Tictail('test', {
-            'api_version': 2
+            'version': 2
         })
-        assert client.config['api_version'] == 2
-        assert client.config['base_url'] == DEFAULT_CONFIG['base_url']
+        assert client.config['version'] == 2
+        assert client.config['base'] == DEFAULT_CONFIG['base']
 
     def test_make_shortcut(self):
         with pytest.raises(ValueError):

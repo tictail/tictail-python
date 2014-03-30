@@ -18,14 +18,14 @@ class ApiError(Exception):
         * A `http_body` property containing the body of the request
 
     """
-    def __init__(self, message, status, http_body):
+    def __init__(self, message, status, response):
         super(ApiError, self).__init__(message)
         self.message = message
         self.status = status
-        self.http_body = http_body
+        self.response = response
 
     def __str__(self):
-        return repr("{} ({}): {}".format(self.message, self.status, self.http_body))
+        return "{} ({}): {}".format(self.message, self.status, self.response)
 
 
 class ValidationError(ApiError):

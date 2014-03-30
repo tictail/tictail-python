@@ -3,27 +3,26 @@ tictail.client
 ~~~~~~~~~~~~~~
 
 """
+import copy
 
 from .transport import RequestsHttpTransport
-from .resource import (
-    Me,
-    Stores,
-    Products,
-    Customers,
-    Followers,
-    Cards,
-    Orders
-)
+from .resource import (Followers,
+                       Cards,
+                       Customers,
+                       Products,
+                       Orders,
+                       Stores,
+                       Me)
 
 
 # API version supported by these bindings.
-API_VERSION = 1
+VERSION = 1
 
 # Default HTTP protocol to use.
 DEFAULT_PROTOCOL = 'https'
 
 # Base API URL.
-BASE_URL = 'api.tictail.com'
+BASE = 'api.tictail.com'
 
 # Whether `requests` should verify SSL certificates.
 VERIFY_SSL_CERTS = True
@@ -33,9 +32,9 @@ DEFAULT_TIMEOUT = 10
 
 # Defauly applied configuration.
 DEFAULT_CONFIG = {
-    'api_version': API_VERSION,
+    'version': VERSION,
     'protocol': DEFAULT_PROTOCOL,
-    'base_url': BASE_URL,
+    'base': BASE,
     'verify_ssl_certs': VERIFY_SSL_CERTS,
     'timeout': DEFAULT_TIMEOUT
 }
@@ -53,7 +52,7 @@ class Client(object):
         self.transport = transport
 
     def _make_config(self, config_override):
-        config = DEFAULT_CONFIG
+        config = copy.deepcopy(DEFAULT_CONFIG)
         if config_override:
             config.update(config_override)
         return config
