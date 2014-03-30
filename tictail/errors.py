@@ -14,8 +14,8 @@ class ApiConnectionError(Exception):
 class ApiError(Exception):
     """Base class for all HTTP errors. Adds two properties to the base `Exception`:
 
-        * a `status` property representing the http status code returned with the error
-        * a `http_body` property containing the body of the request.
+        * A `status` property for the status code returned with the error
+        * A `http_body` property containing the body of the request
 
     """
     def __init__(self, message, status, http_body):
@@ -25,7 +25,7 @@ class ApiError(Exception):
         self.http_body = http_body
 
     def __str__(self):
-        return repr("{} (status: {})".format(self.message, self.status))
+        return repr("{} ({}): {}".format(self.message, self.status, self.http_body))
 
 
 class ValidationError(ApiError):

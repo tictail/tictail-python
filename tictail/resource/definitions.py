@@ -6,20 +6,18 @@ Definitions for all API endpoints and their corresponding instances.
 
 """
 
-
-from .base import (Resource,
-                   ListableResource,
-                   DeletableResource,
-                   CreatableResource,
+from .base import (Collection,
                    Instance,
-                   DeletableInstance)
+                   Listable,
+                   Creatable,
+                   Deletable)
 
 
-class Follower(DeletableInstance):
+class Follower(Instance, Deletable):
     pass
 
 
-class Followers(ListableResource, DeletableResource, CreatableResource):
+class Followers(Collection, Creatable, Deletable):
     endpoint = 'followers'
     instance = Follower
 
@@ -28,7 +26,7 @@ class Product(Instance):
     pass
 
 
-class Products(ListableResource):
+class Products(Collection, Listable):
     endpoint = 'products'
     instance = Product
 
@@ -37,7 +35,7 @@ class Card(Instance):
     pass
 
 
-class Cards(CreatableResource):
+class Cards(Collection, Creatable):
     endpoint = 'cards'
     instance = Card
 
@@ -46,7 +44,7 @@ class Customer(Instance):
     pass
 
 
-class Customers(ListableResource):
+class Customers(Collection, Listable):
     endpoint = 'customers'
     instance = Customer
 
@@ -55,7 +53,7 @@ class Order(Instance):
     pass
 
 
-class Orders(ListableResource):
+class Orders(Collection, Listable):
     endpoint = 'orders'
     instance = Order
 
@@ -70,14 +68,24 @@ class Store(Instance):
     ]
 
 
-class Stores(Resource):
+class Stores(Collection):
     endpoint = 'stores'
     instance = Store
 
 
-class Me(Resource):
+class Me(Collection):
+    """This is a convenient alias to the /stores collection, that returns the
+    currently authenticated store without needing an identifier.
+
+    """
     endpoint = 'me'
     instance = Store
 
     def get(self):
         return self.request('GET', self.uri)
+
+
+__all__ = [
+    'Follower', 'Followers', 'Product', 'Products', 'Card', 'Cards',
+    'Customer', 'Customers', 'Order', 'Orders', 'Store', 'Stores', 'Me'
+]

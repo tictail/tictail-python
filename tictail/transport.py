@@ -34,10 +34,10 @@ class RequestsHttpTransport(object):
 
     def _make_abs_uri(self, uri):
         """Makes an absolute API uri using the API base and protocol."""
-        api_base_url = self.config.api_base_url
-        api_version = "v{}".format(self.config.api_version)
-        protocol = self.config.protocol
-        return "{}://{}/{}/{}".format(protocol, api_base_url, api_version, uri)
+        base_url = self.config['base_url']
+        version = "v{}".format(self.config['api_version'])
+        protocol = self.config['protocol']
+        return "{}://{}/{}/{}".format(protocol, base_url, version, uri)
 
     def _make_auth(self):
         """Returns an oauth2.0 tuple as expected by `requests`."""
@@ -55,8 +55,8 @@ class RequestsHttpTransport(object):
     def get(self, uri, params=None):
         """Issues a GET request.
 
-        :param uri: resource uri.
-        :param params: query parameters.
+        :param uri: The resource URI.
+        :param params: Query parameters.
 
         """
         return self.handle_request('get', uri, params=params)
@@ -64,9 +64,9 @@ class RequestsHttpTransport(object):
     def post(self, uri, params=None, data=None):
         """Issues a POST request.
 
-        :param uri: resource uri.
-        :param params: query parameters.
-        :param data: dictionary representing a JSON body.
+        :param uri: The resource URI.
+        :param params: Query parameters.
+        :param data: A dictionary representing a JSON body.
 
         """
         return self.handle_request('post', uri, params=params, data=data)
@@ -74,8 +74,8 @@ class RequestsHttpTransport(object):
     def delete(self, uri, params=None):
         """Issues a DELETE request.
 
-        :param uri: resource uri.
-        :param params: query parameters.
+        :param uri: The resource URI.
+        :param params: Query parameters.
 
         """
         return self.handle_request('delete', uri, params=params)
@@ -84,29 +84,27 @@ class RequestsHttpTransport(object):
         """The bread and butter of this class. Issues a HTTP requests and takes
         care of all errors. Returns the JSON-decoded data and the status code.
 
-        :param method: the HTTP method to use.
-        :param uri: the uri to fetch.
-        :param params: query parameters.
-        :param data: request body contents.
+        :param method: The HTTP method to use.
+        :param uri: The URI to fetch.
+        :param params: Query parameters.
+        :param data: Request body contents.
 
         """
         method = method.lower()
 
-        # make sure we're using an allowed http method.
-        allowed_methods = self.config.allowed_http_methods
-        assert method in allowed_methods, "`{}` is currently not allowed".format(method)
-
         data = self.json_encode(data)
         abs_uri = self._make_abs_uri(uri)
         auth = self._make_auth()
-        verify_ssl_certs = self.config.verify_ssl_certs
+        verify_ssl_certs = self.config['verify_ssl_certs']
+
         headers = {
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
             'user-agent': "Tictail Python {}".format(__version__)
         }
-        timeout = self.config.timeout
+
+        timeout = self.config['timeout']
 
         try:
             resp = requests.request(method, abs_uri,
@@ -127,14 +125,13 @@ class RequestsHttpTransport(object):
         except requests.exceptions.HTTPError as he:
             self.handle_http_error(he)
         except ValueError as ve:
-            # for a `ValueError` to occur, it means that the API did not return
+            # For a `ValueError` to occur, it means that the API did not return
             # valid JSON as expected, even though no error occured.
             if 'JSON object' in ve.message:
                 content_type = resp.headers['content-type']
                 message = ("The API should return JSON, but there was a problem "
-                           "decoding it. The response content-type was: `{}`. "
-                           "Please contact support@tictail.com if the problem "
-                           "persists.".format(content_type))
+                           "decoding it. The response content-type was: `{}`."
+                           .format(content_type))
                 raise ApiError(message, resp.status_code, resp.text)
             else:
                 raise ve
@@ -145,26 +142,25 @@ class RequestsHttpTransport(object):
     def handle_http_error(self, err):
         resp = err.response
         status_code = resp.status_code
+
         try:
-            json = resp.json()
-            message = json.get('message')
-            # TODO: this should be fixed in the API, responses should be consistent.
-            if message is None:
-                message = json.get('error')
+            jsonresp = resp.json()
+            message = jsonresp.get('message')
+            support_email = jsonresp.get('support_email')
         except ValueError:
-            # if we can't read JSON from the error response, then something is
-            # obviously wrong.
-            # check for Bad Gateway errors first, otherwise just show a generic
-            # error message.
+            jsonresp = {}
+            # If we can't read JSON from the error response, then something is
+            # obviously wrong. Check for Bad Gateway errors first, otherwise
+            # just show a generic error message.
             if status_code == 502:
                 message = ('It seems that the API is unreachable. Please contact '
-                           'support@tictail.com if the problem persists.')
+                           '{} if the problem persists.'.format(support_email))
             else:
-                message = ('An unexpected error occured. Please contact support@tictail.com '
-                           'if the problem persists.')
+                message = ('An unexpected error occured. Please contact {} '
+                           'if the problem persists.'.format(support_email))
 
-        # raise appropriate exception for 400, 403, 404 and 422, and a generic error for
-        # all other error codes.
+        # Raise appropriate exception for 400, 403, 404 and 422, and a generic
+        # error for all other error codes.
         if status_code == 400:
             err_cls = BadRequest
         elif status_code == 403:
@@ -176,4 +172,4 @@ class RequestsHttpTransport(object):
         else:
             err_cls = ServerError
 
-        raise err_cls(message, status_code, resp.text)
+        raise err_cls(message, status_code, json.dumps(jsonresp))

@@ -25,14 +25,14 @@ def raise_import_error_with_hint(dep):
                        .format(dep))
 
 
-# try to import `requests`.
+# Try to import `requests`.
 try:
     import requests
 except ImportError:
     raise_import_error_with_hint('requests')
 
 
-# try to import `json` and fallback to `simplejson` if not available.
+# Try to import `json` and fallback to `simplejson` if not available.
 try:
     import json
 except ImportError:

@@ -2,22 +2,22 @@
 tictail.resource.base
 ~~~~~~~~~~~~~~~~~~~~~
 
-Base definitions for `Resource` and `Instance`. The prior follow a hierarchical
-and recursive structure with `Resource` being the parent and `Instance` the child.
+Base definitions for `Collection` and `Instance`. They follow a hierarchical and
+recursive structure with `Collection` being the parent and `Instance` the child.
 
-`Instance` can include other `Resource` objects as subresources, which in turn
-are parents for `Instance` objects. Just like Inception.
+`Instance` objects can include `Collection` objects as subresources, which in turn
+are parents for their own `Instance` objects. Just like Inception.
 
 """
 
 from itertools import izip
 
 
-class ResourceBase(object):
+class Resource(object):
     def __init__(self, transport):
-        """Initializes the base class.
+        """Initializes the base `Resource` class.
 
-        :param transport: an instance of the transport strategy.
+        :param transport: An instance of the transport strategy.
 
         """
         self.transport = transport
@@ -29,15 +29,15 @@ class ResourceBase(object):
         return data, status_code
 
 
-class Resource(ResourceBase):
+class Collection(Resource):
     def __init__(self, transport, endpoint_prefix=''):
-        """Initializes an API resource.
+        """Initializes an API collection resource.
 
-        :param transport: an instance of the transport strategy.
-        :param endpoint_prefix: an optiona prefix to be attached to the `endpoint`.
+        :param transport: An instance of the transport strategy.
+        :param endpoint_prefix: An optional prefix to be attached to the `endpoint`.
 
         """
-        super(Resource, self).__init__(transport)
+        super(Collection, self).__init__(transport)
         self.endpoint_prefix = endpoint_prefix
 
     @property
@@ -56,46 +56,28 @@ class Resource(ResourceBase):
     def get(self, id):
         """Returns an `Instance` of this resource by `id`.
 
-        :param id: the primary key of the instance to fetch.
+        :param id: The primary key of the instance to fetch.
 
         """
         data, _ = self.request('GET', "{}/{}".format(self.uri, id))
         return self.make_instance(data)
 
 
-class ListableResource(Resource):
-    def list(self):
-        data, _ = self.request('GET', self.uri)
-        return self.make_instance(data)
-
-
-class CreatableResource(Resource):
-    def create(self, body):
-        data, _ = self.request('POST', self.uri, data=body)
-        return self.make_instance(data)
-
-
-class DeletableResource(Resource):
-    def delete(self):
-        data, status = self.request('DELETE', self.uri)
-        return status == 204
-
-
-class Instance(ResourceBase):
+class Instance(Resource):
     """A single instance of an API resource."""
 
-    # a set of attributes that should not be included in this instance's data.
-    # note: `transport` is inherited from `ResourceBase`.
+    # A set of attributes that should not be included in this instance's data.
+    # Note: `transport` is inherited from `ResourceBase`.
     _internal_attrs = set(['transport', 'parent_uri', '_keys', '_subnames'])
 
-    # a list of `Resource` objects, that will be instantiated as subresources.
+    # A list of `Resource` objects, that will be instantiated as subresources.
     subresources = []
 
     def __init__(self, data, parent_uri, transport):
         """Initializes this instance.
 
-        :param data: a dict of data for this instance.
-        :param parent_uri: this instance's parent resource uri.
+        :param data: A dict of data for this instance.
+        :param parent_uri: This instance's parent resource uri.
 
         """
         self._keys = set()
@@ -158,13 +140,30 @@ class Instance(ResourceBase):
         return "{}({})".format(name, pprint.pformat(self.to_dict()))
 
 
-class DeletableInstance(Instance):
+class Listable(object):
+    """Resource mixin that allows for listing a resource. Applies to collections
+    only, since an instance cannot be listed.
+
+    """
+    def list(self):
+        data, _ = self.request('GET', self.uri)
+        return self.make_instance(data)
+
+
+class Creatable(object):
+    """Resource mixin that allows for creating a resource."""
+    def create(self, body):
+        data, _ = self.request('POST', self.uri, data=body)
+        return self.make_instance(data)
+
+
+class Deletable(object):
+    """Resource mixin that allows for deleting a resource."""
     def delete(self):
         data, status = self.request('DELETE', self.uri)
         return status == 204
 
 
 __all__ = [
-    'Resource', 'ListableResource', 'DeletableResource',
-    'CreatableResource', 'Instance', 'DeletableInstance'
+    'Resource', 'Collection', 'Instance', 'Listable', 'Creatable', 'Deletable'
 ]

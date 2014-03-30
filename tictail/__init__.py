@@ -1,2 +1,1 @@
-from .client import Tictail
-from .version import __version__
+from .client import Client as Tictail
