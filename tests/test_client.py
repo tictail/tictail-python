@@ -42,14 +42,14 @@ class TestClient(object):
             client._make_shortcut(Cards, None)
 
         resource = client._make_shortcut(Cards, 1)
-        assert resource.uri == 'stores/1/cards'
+        assert resource.uri == '/stores/1/cards'
 
     @pytest.mark.parametrize('method,expected_uri', [
-        ('followers', 'stores/1/followers'),
-        ('cards', 'stores/1/cards'),
-        ('customers', 'stores/1/customers'),
-        ('products', 'stores/1/products'),
-        ('orders', 'stores/1/orders'),
+        ('followers', '/stores/1/followers'),
+        ('cards', '/stores/1/cards'),
+        ('customers', '/stores/1/customers'),
+        ('products', '/stores/1/products'),
+        ('orders', '/stores/1/orders'),
     ])
     def test_default_shortcuts(self, client, method, expected_uri):
         shortcut = getattr(client, method)

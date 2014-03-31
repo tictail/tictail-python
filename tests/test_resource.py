@@ -47,12 +47,12 @@ class TestResource(object):
 class TestCollection(object):
 
     @pytest.mark.parametrize('input,expected', [
-        (('test', None), 'test'),
-        (('/test', None), 'test'),
-        (('test/', None), 'test'),
-        (('test', '/prefix'), 'prefix/test'),
-        (('test', 'prefix/'), 'prefix/test'),
-        (('test', 'prefix'), 'prefix/test')
+        (('test', None), '/test'),
+        (('/test', None), '/test'),
+        (('test/', None), '/test'),
+        (('test', '/prefix'), '/prefix/test'),
+        (('test', 'prefix/'), '/prefix/test'),
+        (('test', 'prefix'), '/prefix/test')
     ])
     def test_uri(self, transport, input, expected):
         endpoint, prefix = input
@@ -86,7 +86,7 @@ class TestInstance(object):
     @pytest.mark.parametrize('input,expected', [
         (({}, 'parent'), ([], 'parent')),
         ((None, 'parent'), ([], 'parent')),
-        (({'foo': 'bar'}, '/parent'), (['foo'], 'parent'))
+        (({'foo': 'bar'}, '/parent'), (['foo'], '/parent'))
     ])
     def test_construction(self, transport, input, expected):
         data, parent_uri = input
@@ -127,6 +127,17 @@ class TestInstance(object):
         to_dict = instance.to_dict()
         for attr in instance._internal_attrs:
             assert attr not in to_dict
+
+    @pytest.mark.parametrize('input,expected', [
+        ('parent', '/parent/1'),
+        ('parent/1', '/parent/1/1'),
+        ('/parent/1', '/parent/1/1'),
+        ('/parent/1/', '/parent/1/1')
+    ])
+    def test_uri(self, transport, input, expected):
+        data = {'id': 1}
+        instance = Instance(data, input, transport)
+        assert instance.uri == expected
 
     def test_pk(self, transport):
         data = {'id': 1}
@@ -171,7 +182,7 @@ class TestRetrievable(object):
         instance = collection.get(1)
         assert isinstance(instance, Instance)
         assert instance.foo == 'bar'
-        mock.assert_called_with('GET', 'foo/1')
+        mock.assert_called_with('GET', '/foo/1')
 
 class TestListable(object):
     class FooCollection(Collection, Listable):
@@ -188,7 +199,7 @@ class TestListable(object):
         assert isinstance(instances, list)
         assert len(instances) == 1
         assert instances[0].foo == 'bar'
-        mock.assert_called_with('GET', 'foo', params={})
+        mock.assert_called_with('GET', '/foo', params={})
 
     def test_all_with_params(self, monkeypatch, transport):
         collection = self.FooCollection(transport)
@@ -200,7 +211,7 @@ class TestListable(object):
         assert isinstance(instances, list)
         assert len(instances) == 1
         assert instances[0].foo == 'bar'
-        mock.assert_called_with('GET', 'foo', params={'limit': 10, 'after': 25})
+        mock.assert_called_with('GET', '/foo', params={'limit': 10, 'after': 25})
 
 
 class TestCreatable(object):
@@ -219,7 +230,7 @@ class TestCreatable(object):
         assert isinstance(instance, Instance)
         assert instance.foo == 'bar'
         assert instance.id == 1
-        mock.assert_called_with('POST', 'foo', data=body)
+        mock.assert_called_with('POST', '/foo', data=body)
 
 
 class TestDeletable(object):
@@ -236,7 +247,7 @@ class TestDeletable(object):
         monkeypatch.setattr(collection, 'request', mock)
 
         assert collection.delete() is True
-        mock.assert_called_with('DELETE', 'foo')
+        mock.assert_called_with('DELETE', '/foo')
 
     def test_delete_on_instance(self, monkeypatch, transport):
         collection = self.FooCollection(transport)
@@ -247,11 +258,11 @@ class TestDeletable(object):
         instance = collection.get(1)
         assert isinstance(instance, Instance)
         assert instance.foo == 'bar'
-        mock.assert_called_with('GET', 'foo/1')
+        mock.assert_called_with('GET', '/foo/1')
 
         rv = ({}, 204)
         mock = MagicMock(return_value=rv)
         monkeypatch.setattr(instance, 'request', mock)
 
         assert instance.delete() is True
-        mock.assert_called_with('DELETE', 'foo/1')
+        mock.assert_called_with('DELETE', '/foo/1')

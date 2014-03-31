@@ -64,9 +64,9 @@ class Collection(Resource):
     def uri(self):
         endpoint = self._remove_slashes(self.endpoint)
         if not self.prefix:
-            return endpoint
+            return "/{}".format(endpoint)
         prefix = self._remove_slashes(self.prefix)
-        return "{}/{}".format(prefix, endpoint)
+        return "/{}/{}".format(prefix, endpoint)
 
     def make_instance(self, data):
         """Makes an instance (or a list of instances) of this resource from
@@ -108,7 +108,7 @@ class Instance(Resource):
 
         """
         self._data_keys = set()
-        self.parent_uri = self._remove_slashes(parent_uri)
+        self.parent_uri = parent_uri
 
         super(Instance, self).__init__(transport)
 
@@ -144,7 +144,8 @@ class Instance(Resource):
 
     @property
     def uri(self):
-        return "{}/{}".format(self.parent_uri, self.pk)
+        parent_uri = self._remove_slashes(self.parent_uri)
+        return "/{}/{}".format(parent_uri, self.pk)
 
     def keys(self):
         return list(self._data_keys)
