@@ -65,7 +65,7 @@ class Client(object):
         if store_id is None:
             raise ValueError('`store_id` cannot be None')
         prefix = "{}/{}".format(Stores.endpoint, store_id)
-        return resource_cls(self.transport, endpoint_prefix=prefix)
+        return resource_cls(self.transport, prefix=prefix)
 
     # ====== Root Endpoints ====== #
 

@@ -1,4 +1,4 @@
-.PHONY: clean test test-unit test-integration
+.PHONY: clean test
 
 clean-pyc:
 	echo 'Cleaning .pyc files'

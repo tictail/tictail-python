@@ -8,30 +8,26 @@ from tictail.resource import Cards
 
 class TestClient(object):
 
-    @property
-    def client(self):
-        return Tictail('test')
+    def test_construction(self, client):
+        assert client.access_token == 'test'
+        assert client.transport is not None
+        assert client.config is not None
+        assert client.config == DEFAULT_CONFIG
 
-    def test_construction(self):
-        assert self.client.access_token == 'test'
-        assert self.client.transport is not None
-        assert self.client.config is not None
-        assert self.client.config == DEFAULT_CONFIG
-
-    def test_make_transport(self):
-        transport = self.client._make_transport()
+    def test_make_transport(self, client):
+        transport = client._make_transport()
         assert transport.config == DEFAULT_CONFIG
         assert transport.access_token == 'test'
 
-    def test_make_config(self):
-        config = self.client._make_config({
+    def test_make_config(self, client):
+        config = client._make_config({
             'version': 2,
             'base': 'test.foo.bar'
         })
         assert config['version'] == 2
         assert config['base'] == 'test.foo.bar'
 
-        config = self.client._make_config(None)
+        config = client._make_config(None)
         assert config == DEFAULT_CONFIG
 
     def test_config_override_via_constructor(self):
@@ -41,11 +37,11 @@ class TestClient(object):
         assert client.config['version'] == 2
         assert client.config['base'] == DEFAULT_CONFIG['base']
 
-    def test_make_shortcut(self):
+    def test_make_shortcut(self, client):
         with pytest.raises(ValueError):
-            self.client._make_shortcut(Cards, None)
+            client._make_shortcut(Cards, None)
 
-        resource = self.client._make_shortcut(Cards, 1)
+        resource = client._make_shortcut(Cards, 1)
         assert resource.uri == 'stores/1/cards'
 
     @pytest.mark.parametrize('method,expected_uri', [
@@ -55,7 +51,7 @@ class TestClient(object):
         ('products', 'stores/1/products'),
         ('orders', 'stores/1/orders'),
     ])
-    def test_default_shortcuts(self, method, expected_uri):
-        shortcut = getattr(self.client, method)
+    def test_default_shortcuts(self, client, method, expected_uri):
+        shortcut = getattr(client, method)
         resource = shortcut(1)
         assert resource.uri == expected_uri

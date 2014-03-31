@@ -22,32 +22,55 @@ class Resource(object):
         """
         self.transport = transport
 
+    def _remove_slashes(self, url):
+        """Removes leading and trailing slashes from the url `fragment`."""
+        if not url:
+            return url
+        if url[0] == '/':
+            url = url[1:]
+        if url[-1] == '/':
+            url = url[:-1]
+        return url
+
     def request(self, method, uri, **kwargs):
         method = method.lower()
         http_method = getattr(self.transport, method)
-        data, status_code = http_method(uri, **kwargs)
-        return data, status_code
+        return http_method(uri, **kwargs)
 
 
 class Collection(Resource):
-    def __init__(self, transport, endpoint_prefix=''):
+    """Represents a collection resource. Expects `endpoint` and `instance` to
+    be defined as static properties.
+
+    """
+    instance = None
+    endpoint = None
+
+    def __init__(self, transport, prefix=''):
         """Initializes an API collection resource.
 
         :param transport: An instance of the transport strategy.
-        :param endpoint_prefix: An optional prefix to be attached to the `endpoint`.
+        :param prefix: An optional prefix to be attached to the `endpoint`.
 
         """
         super(Collection, self).__init__(transport)
-        self.endpoint_prefix = endpoint_prefix
+        self.prefix = prefix
 
     @property
     def uri(self):
-        if self.endpoint_prefix:
-            return "{}/{}".format(self.endpoint_prefix, self.endpoint)
-        else:
-            return self.endpoint
+        endpoint = self._remove_slashes(self.endpoint)
+        if not self.prefix:
+            return endpoint
+        prefix = self._remove_slashes(self.prefix)
+        return "{}/{}".format(prefix, endpoint)
 
     def make_instance(self, data):
+        """Makes an `instance` from the given `data` using the `instance` class
+        property.
+
+        :param data: A dict or list of dicts.
+
+        """
         if isinstance(data, list):
             return [self.instance(d, self.uri, self.transport) for d in data]
         else:
@@ -67,22 +90,30 @@ class Instance(Resource):
     """A single instance of an API resource."""
 
     # A set of attributes that should not be included in this instance's data.
-    # Note: `transport` is inherited from `ResourceBase`.
-    _internal_attrs = set(['transport', 'parent_uri', '_keys', '_subnames'])
+    # Note: `transport` is inherited from `Resource`.
+    _internal_attrs = set([
+        'transport',
+        'parent_uri',
+        'subresources',
+        'identifier',
+        '_keys'
+    ])
 
     # A list of `Resource` objects, that will be instantiated as subresources.
     subresources = []
+
+    # The name of the primary key for this instance.
+    identifier = 'id'
 
     def __init__(self, data, parent_uri, transport):
         """Initializes this instance.
 
         :param data: A dict of data for this instance.
-        :param parent_uri: This instance's parent resource uri.
+        :param parent_uri: This instance's parent resource URI.
 
         """
         self._keys = set()
-        self._subnames = set()
-        self.parent_uri = parent_uri
+        self.parent_uri = self._remove_slashes(parent_uri)
 
         super(Instance, self).__init__(transport)
 
@@ -90,37 +121,41 @@ class Instance(Resource):
             data = {}
 
         for k, v in data.iteritems():
-            self.__setattr__(k, v)
+            setattr(self, k, v)
 
         self.instantiate_subresources()
 
     def __setattr__(self, k, v):
-        self.__dict__[k] = v
+        super(Resource, self).__setattr__(k, v)
         if k not in self._internal_attrs:
             self._keys.add(k)
 
-    def __getattr__(self, k):
-        try:
-            return self.__dict__[k]
-        except KeyError as ke:
-            raise AttributeError(ke.message)
-
     def instantiate_subresources(self):
+        """Instantiates all subresources and attaches them as properties on this
+        `instance`. For now, only `Collection` subresources are supported.
+
+        """
         for sub in self.subresources:
-            inst = sub(self.transport, endpoint_prefix=self.uri)
+            inst = sub(self.transport, prefix=self.uri)
             name = inst.__class__.__name__.lower()
-            self._subnames.add(name)
-            self.__setattr__(name, inst)
+            setattr(self, name, inst)
+
+    @property
+    def pk(self):
+        identifier = self.identifier
+        if not hasattr(self, identifier):
+            raise ValueError('This instance does not have a primary key value.')
+        return getattr(self, identifier)
 
     @property
     def uri(self):
-        return "{}/{}".format(self.parent_uri, self.id)
+        return "{}/{}".format(self.parent_uri, self.pk)
 
     def keys(self):
         return list(self._keys)
 
     def values(self):
-        return [self.__getattr__(k) for k in self.keys()]
+        return [getattr(self, k) for k in self.keys()]
 
     def items(self):
         return zip(self.keys(), self.values())
@@ -129,10 +164,7 @@ class Instance(Resource):
         return izip(self.keys(), self.values())
 
     def to_dict(self):
-        d = {}
-        for k, v in self.items():
-            d[k] = v
-        return d
+        return dict(self.items())
 
     def __repr__(self):
         import pprint

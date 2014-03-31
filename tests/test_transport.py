@@ -2,7 +2,6 @@
 import pytest
 from mock import MagicMock
 
-from tictail import Tictail
 from tictail.version import __version__
 from tictail.importer import json, requests
 from tictail.errors import ApiConnectionError, Forbidden, ServerError, ApiError
@@ -14,16 +13,7 @@ HTTPError = requests.exceptions.HTTPError
 
 class TestTransport(object):
 
-    @property
-    def client(self):
-        return Tictail('test')
-
-    @property
-    def transport(self):
-        return self.client.transport
-
-    def test_make_abs_url(self):
-        transport = self.transport
+    def test_make_abs_url(self, transport):
         base = transport.config['base']
         protocol = transport.config['protocol']
         version = transport.config['version']
@@ -36,13 +26,13 @@ class TestTransport(object):
         abs_uri = transport._make_abs_uri('stores/')
         assert abs_uri == '{}://{}/v{}/stores'.format(protocol, base, version)
 
-    def test_make_auth(self):
-        assert self.transport._make_auth() == ('Bearer', 'test')
+    def test_make_auth(self, transport):
+        assert transport._make_auth() == ('Bearer', 'test')
 
-    def test_utf8(self):
+    def test_utf8(self, transport):
         value = u'ƃäｃòԉ'
-        assert self.transport._utf8(value) == value.encode('utf-8')
-        assert self.transport._utf8('bacon') == 'bacon'
+        assert transport._utf8(value) == value.encode('utf-8')
+        assert transport._utf8('bacon') == 'bacon'
 
     @pytest.mark.parametrize('call_params', [
         ('GET', 'foo', {'params': u'Båｃòԉ'}),
@@ -50,10 +40,9 @@ class TestTransport(object):
         ('DELETE', 'foo', {'params': 'bar'}),
         ('PUT', 'foo', {'params': 'bar', 'data': {'foo': 'bar'}})
     ])
-    def test_http_methods(self, monkeypatch, call_params):
+    def test_http_methods(self, monkeypatch, transport, call_params):
         mock = MagicMock()
         method, uri, kwargs = call_params
-        transport = self.transport
 
         monkeypatch.setattr(transport, 'handle_request', mock)
         inst_method = getattr(transport, method.lower())
@@ -67,10 +56,9 @@ class TestTransport(object):
         ('DELETE', 'foo', {'params': 'bar'}),
         ('PUT', 'foo', {'params': 'bar', 'data': {'foo': 'bar'}})
     ])
-    def test_handle_request(self, monkeypatch, call_params):
+    def test_handle_request(self, monkeypatch, transport, call_params):
         mock = MagicMock()
         method, uri, kwargs = call_params
-        transport = self.transport
 
         monkeypatch.setattr('tictail.transport.requests.request', mock)
 
@@ -105,9 +93,7 @@ class TestTransport(object):
         (HTTPError, '_handle_http_error'),
         (Exception, '_handle_unexpected_error')
     ])
-    def test_handle_request_error(self, monkeypatch, input):
-        transport = self.transport
-
+    def test_handle_request_error(self, monkeypatch, transport, input):
         error_cls, error_handler = input
         error = error_cls()
 
@@ -124,16 +110,16 @@ class TestTransport(object):
         transport.handle_request('GET', 'foo')
         mock_error_handler.assert_called_with(error)
 
-    def test_handle_connection_error(self):
+    def test_handle_connection_error(self, transport):
         error = ConnectionError('error message')
         with pytest.raises(ApiConnectionError):
-            self.transport._handle_connection_error(error)
+            transport._handle_connection_error(error)
 
     @pytest.mark.parametrize('input', [
         (403, Forbidden),
         (500, ServerError)
     ])
-    def test_handle_http_error(self, input):
+    def test_handle_http_error(self, transport, input):
         status, error_cls = input
 
         error_body = {
@@ -149,7 +135,7 @@ class TestTransport(object):
         error.response = mock
 
         with pytest.raises(error_cls) as excinfo:
-            self.transport._handle_http_error(error)
+            transport._handle_http_error(error)
 
         err = excinfo.value
         assert err.message == 'error message'
@@ -160,7 +146,7 @@ class TestTransport(object):
         (502, 'API is unreachable'),
         (509, 'unexpected error')
     ])
-    def test_handle_http_error_no_json_response(self, input):
+    def test_handle_http_error_no_json_response(self, transport, input):
         status, error_string = input
 
         mock = MagicMock()
@@ -171,14 +157,14 @@ class TestTransport(object):
         error.response = mock
 
         with pytest.raises(ServerError) as excinfo:
-            self.transport._handle_http_error(error)
+            transport._handle_http_error(error)
 
         err = excinfo.value
         assert error_string in err.message
         assert err.status == status
         assert err.response is None
 
-    def test_handle_unexpected_error(self):
+    def test_handle_unexpected_error(self, transport):
         mock = MagicMock()
         mock.status_code = 500
         mock.json.side_effect = ValueError
@@ -189,7 +175,7 @@ class TestTransport(object):
         error.response = mock
 
         with pytest.raises(ApiError) as excinfo:
-            self.transport._handle_unexpected_error(error)
+            transport._handle_unexpected_error(error)
 
         err = excinfo.value
         assert 'should return JSON' in err.message
