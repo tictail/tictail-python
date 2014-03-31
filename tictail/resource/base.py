@@ -30,11 +30,9 @@ class Resource(object):
         """Removes leading and trailing slashes from the url `fragment`."""
         if not url:
             return url
-        if url[0] == '/':
-            url = url[1:]
-        if url[-1] == '/':
-            url = url[:-1]
-        return url
+        start = 1 if url[0] == '/' else None
+        end = -1 if url[-1] == '/' else None
+        return url[start:end]
 
     def request(self, method, uri, **kwargs):
         method = method.lower()
