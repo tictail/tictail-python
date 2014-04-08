@@ -29,7 +29,7 @@ BASE = 'api.tictail.com'
 VERIFY_SSL_CERTS = True
 
 # Default socket timeout.
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 20
 
 # Defauly applied configuration.
 DEFAULT_CONFIG = {

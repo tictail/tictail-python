@@ -50,10 +50,6 @@ class RequestsHttpTransport(object):
             uri = uri[:-1]
         return "{}://{}/{}/{}".format(protocol, base, version, uri)
 
-    def _make_auth(self):
-        """Returns an oauth2.0 tuple as expected by `requests`."""
-        return ('Bearer', self.access_token)
-
     def _utf8(self, value):
         return value.encode('utf-8') if isinstance(value, unicode) else value
 
@@ -164,10 +160,10 @@ class RequestsHttpTransport(object):
             data = json.dumps(data)
 
         abs_uri = self._make_abs_uri(uri)
-        auth = self._make_auth()
         verify_ssl_certs = self.config['verify_ssl_certs']
 
         headers = {
+            'authorization': "Bearer {}".format(self.access_token),
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
@@ -180,7 +176,6 @@ class RequestsHttpTransport(object):
             resp = requests.request(method, abs_uri,
                                     params=params,
                                     data=data,
-                                    auth=auth,
                                     headers=headers,
                                     timeout=timeout,
                                     verify=verify_ssl_certs)

@@ -26,9 +26,6 @@ class TestTransport(object):
         abs_uri = transport._make_abs_uri('stores/')
         assert abs_uri == '{}://{}/v{}/stores'.format(protocol, base, version)
 
-    def test_make_auth(self, transport):
-        assert transport._make_auth() == ('Bearer', 'test')
-
     def test_utf8(self, transport):
         value = u'ƃäｃòԉ'
         assert transport._utf8(value) == value.encode('utf-8')
@@ -66,6 +63,7 @@ class TestTransport(object):
         protocol = transport.config['protocol']
         version = transport.config['version']
         headers = {
+            'authorization': 'Bearer test',
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
@@ -82,9 +80,8 @@ class TestTransport(object):
             "{}://{}/v{}/{}".format(protocol, base, version, uri),
             params=params,
             data=data,
-            auth=('Bearer', 'test'),
             headers=headers,
-            timeout=10,
+            timeout=20,
             verify=True
         )
 
