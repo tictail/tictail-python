@@ -100,7 +100,7 @@ class TestInstance(object):
         data, parent_uri = input
         exp_keys, exp_parent_uri = expected
         instance = Instance(data, parent_uri, transport)
-        assert instance._keys == set(exp_keys)
+        assert instance._data_keys == set(exp_keys)
         assert instance.parent_uri == exp_parent_uri
         for k, v in (data or {}).items():
             assert getattr(instance, k) == v
@@ -122,10 +122,19 @@ class TestInstance(object):
         assert isinstance(instance.comments, Comments)
 
         # Check that all other properties are correct.
-        assert instance._keys == set(['id', 'posts', 'comments'])
+        assert instance._data_keys == set(['id'])
         assert instance.parent_uri == 'parent'
         for k, v in data.items():
             assert getattr(instance, k) == v
+
+        # Check that the subresources are included in the internal attributes.
+        assert 'posts' in instance._internal_attrs
+        assert 'comments' in instance._internal_attrs
+
+        # Check that we are not exposing any internal attributes.
+        to_dict = instance.to_dict()
+        for attr in instance._internal_attrs:
+            assert attr not in to_dict
 
     def test_pk(self, transport):
         data = {'id': 1}

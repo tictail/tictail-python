@@ -96,7 +96,7 @@ class Instance(Resource):
         'parent_uri',
         'subresources',
         'identifier',
-        '_keys'
+        '_data_keys'
     ])
 
     # A list of `Resource` objects, that will be instantiated as subresources.
@@ -112,7 +112,7 @@ class Instance(Resource):
         :param parent_uri: This instance's parent resource URI.
 
         """
-        self._keys = set()
+        self._data_keys = set()
         self.parent_uri = self._remove_slashes(parent_uri)
 
         super(Instance, self).__init__(transport)
@@ -128,7 +128,7 @@ class Instance(Resource):
     def __setattr__(self, k, v):
         super(Resource, self).__setattr__(k, v)
         if k not in self._internal_attrs:
-            self._keys.add(k)
+            self._data_keys.add(k)
 
     def instantiate_subresources(self):
         """Instantiates all subresources and attaches them as properties on this
@@ -138,6 +138,7 @@ class Instance(Resource):
         for sub in self.subresources:
             inst = sub(self.transport, prefix=self.uri)
             name = inst.__class__.__name__.lower()
+            self._internal_attrs.add(name)
             setattr(self, name, inst)
 
     @property
@@ -152,7 +153,7 @@ class Instance(Resource):
         return "{}/{}".format(self.parent_uri, self.pk)
 
     def keys(self):
-        return list(self._keys)
+        return list(self._data_keys)
 
     def values(self):
         return [getattr(self, k) for k in self.keys()]
