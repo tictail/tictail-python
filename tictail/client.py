@@ -14,6 +14,7 @@ from .resource import (Followers,
                        Orders,
                        Stores,
                        Themes,
+                       Categories,
                        Me)
 
 
@@ -134,3 +135,11 @@ class Client(object):
 
         """
         return self._make_shortcut(Themes, store)
+
+    def categories(self, store=None):
+        """Returns a `Categories` resource.
+
+        :param store: A store id.
+
+        """
+        return self._make_shortcut(Categories, store)

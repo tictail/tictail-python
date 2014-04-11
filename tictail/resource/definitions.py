@@ -74,6 +74,15 @@ class Themes(Collection, Retrievable):
         return 'theme'
 
 
+class Category(Instance):
+    pass
+
+
+class Categories(Collection, Listable):
+    endpoint = 'categories'
+    instance = Category
+
+
 class Store(Instance):
     subresources = [
         Cards,
@@ -81,7 +90,8 @@ class Store(Instance):
         Customers,
         Followers,
         Orders,
-        Themes
+        Themes,
+        Categories
     ]
 
 
@@ -105,5 +115,5 @@ class Me(Collection, Retrievable):
 __all__ = [
     'Follower', 'Followers', 'Product', 'Products', 'Card', 'Cards',
     'Customer', 'Customers', 'Order', 'Orders', 'Theme', 'Themes',
-    'Store', 'Stores', 'Me'
+    'Category', 'Categories', 'Store', 'Stores', 'Me'
 ]
