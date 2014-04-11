@@ -13,6 +13,7 @@ from .resource import (Followers,
                        Products,
                        Orders,
                        Stores,
+                       Themes,
                        Me)
 
 
@@ -100,3 +101,6 @@ class Client(object):
 
     def orders(self, store=None):
         return self._make_shortcut(Orders, store)
+
+    def theme(self, store=None):
+        return self._make_shortcut(Themes, store)

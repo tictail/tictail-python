@@ -59,13 +59,29 @@ class Orders(Collection, Retrievable, Listable):
     instance = Order
 
 
+class Theme(Instance):
+    pass
+
+
+class Themes(Collection, Retrievable):
+    endpoint = 'theme'
+    instance = Theme
+
+    @property
+    def _name(self):
+        # Themes are exposed as a singleton collection on a store, under the
+        # `theme` property.
+        return 'theme'
+
+
 class Store(Instance):
     subresources = [
         Cards,
         Products,
         Customers,
         Followers,
-        Orders
+        Orders,
+        Themes
     ]
 
 
@@ -88,5 +104,6 @@ class Me(Collection, Retrievable):
 
 __all__ = [
     'Follower', 'Followers', 'Product', 'Products', 'Card', 'Cards',
-    'Customer', 'Customers', 'Order', 'Orders', 'Store', 'Stores', 'Me'
+    'Customer', 'Customers', 'Order', 'Orders', 'Theme', 'Themes',
+    'Store', 'Stores', 'Me'
 ]
