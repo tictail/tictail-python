@@ -2,7 +2,13 @@
 import pytest
 from mock import MagicMock
 
-from tictail.resource.base import Resource, Collection, Instance
+from tictail.resource.base import (Resource,
+                                   Collection,
+                                   Instance,
+                                   Retrievable,
+                                   Listable,
+                                   Creatable,
+                                   Deletable)
 
 
 class TestResource(object):
@@ -149,3 +155,103 @@ class TestInstance(object):
         assert instance.items() == data.items()
         assert list(instance.iteritems()) == list(data.iteritems())
         assert instance.to_dict() == data
+
+
+class TestRetrievable(object):
+    class FooCollection(Collection, Retrievable):
+        endpoint = 'foo'
+        instance = Instance
+
+    def test_get(self, monkeypatch, transport):
+        collection = self.FooCollection(transport)
+        rv = ({'id': 1, 'foo': 'bar'}, 200)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(collection, 'request', mock)
+
+        instance = collection.get(1)
+        assert isinstance(instance, Instance)
+        assert instance.foo == 'bar'
+        mock.assert_called_with('GET', 'foo/1')
+
+class TestListable(object):
+    class FooCollection(Collection, Listable):
+        endpoint = 'foo'
+        instance = Instance
+
+    def test_all(self, monkeypatch, transport):
+        collection = self.FooCollection(transport)
+        rv = ([{'id': 1, 'foo': 'bar'}], 200)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(collection, 'request', mock)
+
+        instances = collection.all()
+        assert isinstance(instances, list)
+        assert len(instances) == 1
+        assert instances[0].foo == 'bar'
+        mock.assert_called_with('GET', 'foo', params={})
+
+    def test_all_with_params(self, monkeypatch, transport):
+        collection = self.FooCollection(transport)
+        rv = ([{'id': 1, 'foo': 'bar'}], 200)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(collection, 'request', mock)
+
+        instances = collection.all(limit=10, after=25)
+        assert isinstance(instances, list)
+        assert len(instances) == 1
+        assert instances[0].foo == 'bar'
+        mock.assert_called_with('GET', 'foo', params={'limit': 10, 'after': 25})
+
+
+class TestCreatable(object):
+    class FooCollection(Collection, Creatable):
+        endpoint = 'foo'
+        instance = Instance
+
+    def test_create(self, monkeypatch, transport):
+        collection = self.FooCollection(transport)
+        rv = ({'id': 1, 'foo': 'bar'}, 201)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(collection, 'request', mock)
+
+        body = {'foo': 'bar'}
+        instance = collection.create(body)
+        assert isinstance(instance, Instance)
+        assert instance.foo == 'bar'
+        assert instance.id == 1
+        mock.assert_called_with('POST', 'foo', data=body)
+
+
+class TestDeletable(object):
+    class FooCollection(Collection, Retrievable, Deletable):
+        class FooInstance(Instance, Deletable):
+            pass
+        endpoint = 'foo'
+        instance = FooInstance
+
+    def test_delete_on_collection(self, monkeypatch, transport):
+        collection = self.FooCollection(transport)
+        rv = ({}, 204)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(collection, 'request', mock)
+
+        assert collection.delete() is True
+        mock.assert_called_with('DELETE', 'foo')
+
+    def test_delete_on_instance(self, monkeypatch, transport):
+        collection = self.FooCollection(transport)
+        rv = ({'id': 1, 'foo': 'bar'}, 200)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(collection, 'request', mock)
+
+        instance = collection.get(1)
+        assert isinstance(instance, Instance)
+        assert instance.foo == 'bar'
+        mock.assert_called_with('GET', 'foo/1')
+
+        rv = ({}, 204)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(instance, 'request', mock)
+
+        assert instance.delete() is True
+        mock.assert_called_with('DELETE', 'foo/1')
