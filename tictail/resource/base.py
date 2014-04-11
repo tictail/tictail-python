@@ -177,8 +177,8 @@ class Retrievable(object):
 
 class Listable(object):
     """Resource mixin for getting all instances of a resource."""
-    def all(self):
-        data, _ = self.request('GET', self.uri)
+    def all(self, **params):
+        data, _ = self.request('GET', self.uri, params=params)
         return self.make_instance(data)
 
 
