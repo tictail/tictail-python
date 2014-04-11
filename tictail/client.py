@@ -88,19 +88,49 @@ class Client(object):
     # ====== Shortcuts ======= #
 
     def followers(self, store=None):
+        """Returns a `Followers` resource.
+
+        :param store: A store id.
+
+        """
         return self._make_shortcut(Followers, store)
 
     def cards(self, store=None):
+        """Returns a `Card` resource.
+
+        :param store: A store id.
+
+        """
         return self._make_shortcut(Cards, store)
 
     def customers(self, store=None):
+        """Returns a `Customers` resource.
+
+        :param store: A store id.
+
+        """
         return self._make_shortcut(Customers, store)
 
     def products(self, store=None):
+        """Returns a `Products` resource.
+
+        :param store: A store id.
+
+        """
         return self._make_shortcut(Products, store)
 
     def orders(self, store=None):
+        """Returns an `Orders` resource.
+
+        :param store: A store id.
+
+        """
         return self._make_shortcut(Orders, store)
 
     def theme(self, store=None):
+        """Returns a `Themes` resource.
+
+        :param store: A store id.
+
+        """
         return self._make_shortcut(Themes, store)
