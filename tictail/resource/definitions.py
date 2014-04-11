@@ -8,6 +8,7 @@ Definitions for all API endpoints and their corresponding instances.
 
 from .base import (Collection,
                    Instance,
+                   Retrievable,
                    Listable,
                    Creatable,
                    Deletable)
@@ -17,7 +18,7 @@ class Follower(Instance, Deletable):
     pass
 
 
-class Followers(Collection, Creatable, Deletable):
+class Followers(Collection, Listable, Creatable):
     endpoint = 'followers'
     instance = Follower
 
@@ -26,7 +27,7 @@ class Product(Instance):
     pass
 
 
-class Products(Collection, Listable):
+class Products(Collection, Retrievable, Listable):
     endpoint = 'products'
     instance = Product
 
@@ -44,7 +45,7 @@ class Customer(Instance):
     pass
 
 
-class Customers(Collection, Listable):
+class Customers(Collection, Retrievable, Listable):
     endpoint = 'customers'
     instance = Customer
 
@@ -53,7 +54,7 @@ class Order(Instance):
     pass
 
 
-class Orders(Collection, Listable):
+class Orders(Collection, Retrievable, Listable):
     endpoint = 'orders'
     instance = Order
 
@@ -68,12 +69,12 @@ class Store(Instance):
     ]
 
 
-class Stores(Collection):
+class Stores(Collection, Retrievable):
     endpoint = 'stores'
     instance = Store
 
 
-class Me(Collection):
+class Me(Collection, Retrievable):
     """This is a convenient alias to the /stores collection that returns the
     currently authenticated store without needing an identifier.
 
@@ -81,8 +82,8 @@ class Me(Collection):
     endpoint = 'me'
     instance = Store
 
-    def get(self):
-        return self.request('GET', self.uri)
+    def make_instance(self, data):
+        return self.instance(data, 'stores', self.transport)
 
 
 __all__ = [

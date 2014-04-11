@@ -22,6 +22,10 @@ class Resource(object):
         """
         self.transport = transport
 
+    @property
+    def _name(self):
+        return self.__class__.__name__.lower()
+
     def _remove_slashes(self, url):
         """Removes leading and trailing slashes from the url `fragment`."""
         if not url:
@@ -65,8 +69,8 @@ class Collection(Resource):
         return "{}/{}".format(prefix, endpoint)
 
     def make_instance(self, data):
-        """Makes an `instance` from the given `data` using the `instance` class
-        property.
+        """Makes an instance (or a list of instances) of this resource from
+        the given `data` using the `instance` class property.
 
         :param data: A dict or list of dicts.
 
@@ -75,15 +79,6 @@ class Collection(Resource):
             return [self.instance(d, self.uri, self.transport) for d in data]
         else:
             return self.instance(data, self.uri, self.transport)
-
-    def get(self, id):
-        """Returns an `Instance` of this resource by `id`.
-
-        :param id: The primary key of the instance to fetch.
-
-        """
-        data, _ = self.request('GET', "{}/{}".format(self.uri, id))
-        return self.make_instance(data)
 
 
 class Instance(Resource):
@@ -137,9 +132,8 @@ class Instance(Resource):
         """
         for sub in self.subresources:
             inst = sub(self.transport, prefix=self.uri)
-            name = inst.__class__.__name__.lower()
-            self._internal_attrs.add(name)
-            setattr(self, name, inst)
+            self._internal_attrs.add(inst._name)
+            setattr(self, inst._name, inst)
 
     @property
     def pk(self):
@@ -173,12 +167,17 @@ class Instance(Resource):
         return "{}({})".format(name, pprint.pformat(self.to_dict()))
 
 
-class Listable(object):
-    """Resource mixin that allows for listing a resource. Applies to collections
-    only, since an instance cannot be listed.
+class Retrievable(object):
+    """Resource mixin for getting an instance of a resource."""
+    def get(self, id=None):
+        uri = "{}/{}".format(self.uri, id) if id else self.uri
+        data, _ = self.request('GET', uri)
+        return self.make_instance(data)
 
-    """
-    def list(self):
+
+class Listable(object):
+    """Resource mixin for getting all instances of a resource."""
+    def all(self):
         data, _ = self.request('GET', self.uri)
         return self.make_instance(data)
 
@@ -198,5 +197,6 @@ class Deletable(object):
 
 
 __all__ = [
-    'Resource', 'Collection', 'Instance', 'Listable', 'Creatable', 'Deletable'
+    'Resource', 'Collection', 'Instance', 'Retrievable',
+    'Listable', 'Creatable', 'Deletable'
 ]

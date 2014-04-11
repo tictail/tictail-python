@@ -74,20 +74,6 @@ class TestCollection(object):
         assert rv[0].foo == 'bar'
         assert rv[1].fooz == 'barz'
 
-    def test_get(self, monkeypatch, transport):
-        collection = Collection(transport)
-        collection.endpoint = 'test'
-        collection.instance = Instance
-
-        rv = ({'foo': 'bar'}, 200)
-        mock = MagicMock(return_value=rv)
-        monkeypatch.setattr(collection, 'request', mock)
-
-        instance = collection.get(1)
-        assert isinstance(instance, Instance)
-        assert instance.foo == 'bar'
-        mock.assert_called_with('GET', 'test/1')
-
 
 class TestInstance(object):
 

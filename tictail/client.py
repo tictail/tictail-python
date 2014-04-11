@@ -69,13 +69,20 @@ class Client(object):
 
     # ====== Root Endpoints ====== #
 
+    def me(self):
+        """Alias for getting the store for which the access token you are using
+        is valid.
+
+        >>> tt = Tictail('token')
+        >>> tt.me()
+        {...}
+
+        """
+        return Me(self.transport).get()
+
     @property
     def stores(self):
         return Stores(self.transport)
-
-    @property
-    def me(self):
-        return Me(self.transport)
 
     # ====== Shortcuts ======= #
 
