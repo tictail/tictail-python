@@ -30,12 +30,12 @@ setup(
     version=version,
     packages=['tictail', 'tictail.resource'],
     license='MIT',
-    author='Alex Michael',
-    author_email='hi@alexmic.net',
-    url='https://github.com/alexmic/tictail-python',
-    download_url='https://github.com/alexmic/tictail-python/releases',
-    description='Python bindings for the Tictail REST API',
-    keywords=['tictail', 'rest'],
+    author='Tictail AB',
+    author_email='tech@tictail.com',
+    url='https://github.com/tictail/tictail-python',
+    download_url='https://github.com/tictail/tictail-python/releases',
+    description='Python bindings for the Tictail API',
+    keywords=['tictail', 'rest', 'api'],
     requires=requires,
     long_description="""
     TODO
