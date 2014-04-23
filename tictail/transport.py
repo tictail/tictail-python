@@ -42,13 +42,13 @@ class RequestsHttpTransport(object):
 
         """
         base = self.config['base']
-        version = "v{}".format(self.config['version'])
+        version = "v{0}".format(self.config['version'])
         protocol = self.config['protocol']
         if uri[0] == '/':
             uri = uri[1:]
         if uri[-1] == '/':
             uri = uri[:-1]
-        return "{}://{}/{}/{}".format(protocol, base, version, uri)
+        return "{0}://{1}/{2}/{3}".format(protocol, base, version, uri)
 
     def _utf8(self, value):
         return value.encode('utf-8') if isinstance(value, unicode) else value
@@ -99,7 +99,7 @@ class RequestsHttpTransport(object):
             if 'JSON object' in str(err):
                 content_type = resp.headers['content-type']
                 message = ("The API should return JSON, but there was a problem "
-                           "decoding it. The response content-type was: `{}`."
+                           "decoding it. The response content-type was: `{0}`."
                            .format(content_type))
                 raise ApiError(message, resp.status_code, resp.text)
 
@@ -163,11 +163,11 @@ class RequestsHttpTransport(object):
         verify_ssl_certs = self.config['verify_ssl_certs']
 
         headers = {
-            'authorization': "Bearer {}".format(self.access_token),
+            'authorization': "Bearer {0}".format(self.access_token),
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
-            'user-agent': "Tictail Python {}".format(__version__)
+            'user-agent': "Tictail Python {0}".format(__version__)
         }
 
         timeout = self.config['timeout']

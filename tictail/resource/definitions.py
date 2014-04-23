@@ -124,8 +124,8 @@ class Me(Collection, Retrievable):
         return self.instance(data, 'stores', self.transport)
 
 
-__all__ = [
+__all__ = (
     'Follower', 'Followers', 'Product', 'Products', 'Card', 'Cards',
     'Customer', 'Customers', 'Order', 'Orders', 'Theme', 'Themes',
     'Category', 'Categories', 'Store', 'Stores', 'Me'
-]
+)

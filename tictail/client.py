@@ -66,7 +66,7 @@ class Client(object):
     def _make_shortcut(self, resource_cls, store_id):
         if store_id is None:
             raise ValueError('`store_id` cannot be None')
-        prefix = "{}/{}".format(Stores.endpoint, store_id)
+        prefix = "{0}/{1}".format(Stores.endpoint, store_id)
         return resource_cls(self.transport, prefix=prefix)
 
     # ====== Root Endpoints ====== #

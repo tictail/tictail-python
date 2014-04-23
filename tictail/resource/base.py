@@ -62,9 +62,9 @@ class Collection(Resource):
     def uri(self):
         endpoint = self._remove_slashes(self.endpoint)
         if not self.prefix:
-            return "/{}".format(endpoint)
+            return "/{0}".format(endpoint)
         prefix = self._remove_slashes(self.prefix)
-        return "/{}/{}".format(prefix, endpoint)
+        return "/{0}/{1}".format(prefix, endpoint)
 
     def make_instance(self, data):
         """Makes an instance (or a list of instances) of this resource from
@@ -143,7 +143,7 @@ class Instance(Resource):
     @property
     def uri(self):
         parent_uri = self._remove_slashes(self.parent_uri)
-        return "/{}/{}".format(parent_uri, self.pk)
+        return "/{0}/{1}".format(parent_uri, self.pk)
 
     def keys(self):
         return list(self._data_keys)
@@ -163,14 +163,14 @@ class Instance(Resource):
     def __repr__(self):
         import pprint
         name = self.__class__.__name__
-        return "{}({})".format(name, pprint.pformat(self.to_dict()))
+        return "{0}({1})".format(name, pprint.pformat(self.to_dict()))
 
 
 class Retrievable(object):
     """Resource mixin for getting an instance of a resource."""
 
     def get(self, id=None):
-        uri = "{}/{}".format(self.uri, id) if id else self.uri
+        uri = "{0}/{1}".format(self.uri, id) if id else self.uri
         data, _ = self.request('GET', uri)
         return self.make_instance(data)
 
@@ -207,7 +207,7 @@ class Deletable(object):
         return status == 204
 
 
-__all__ = [
+__all__ = (
     'Resource', 'Collection', 'Instance', 'Retrievable',
     'Listable', 'Creatable', 'Deletable'
-]
+)

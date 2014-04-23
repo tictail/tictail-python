@@ -25,7 +25,7 @@ class ApiError(Exception):
         self.response = response
 
     def __repr__(self):
-        return "{} ({}): {}".format(self.message, self.status, self.response)
+        return "{0} ({1}): {2}".format(self.message, self.status, self.response)
 
     def __str__(self):
         return repr(self)
@@ -56,5 +56,7 @@ class ServerError(ApiError):
     pass
 
 
-__all__ = ('ClientError', 'ApiError', 'ApiConnectionError',
-           'ApiValidationError', 'ApiAuthError', 'ApiServerError')
+__all__ = (
+    'ClientError', 'ApiError', 'ApiConnectionError',
+    'ApiValidationError', 'ApiAuthError', 'ApiServerError'
+)
