@@ -189,6 +189,13 @@ class TestListable(object):
         endpoint = 'foo'
         instance = Instance
 
+        def format_params(self, **params):
+            if 'cats' in params:
+                params['cats'] = ','.join(params['cats'])
+            if 'date' in params:
+                params['date'] = params['date'].isoformat()
+            return params
+
     def test_all(self, monkeypatch, transport):
         collection = self.FooCollection(transport)
         rv = ([{'id': 1, 'foo': 'bar'}], 200)
@@ -212,6 +219,25 @@ class TestListable(object):
         assert len(instances) == 1
         assert instances[0].foo == 'bar'
         mock.assert_called_with('GET', '/foo', params={'limit': 10, 'after': 25})
+
+    def test_all_with_formatted_params(self, monkeypatch, transport):
+        collection = self.FooCollection(transport)
+        rv = ([{'id': 1, 'foo': 'bar'}], 200)
+        mock = MagicMock(return_value=rv)
+        monkeypatch.setattr(collection, 'request', mock)
+
+        from datetime import datetime
+        now = datetime.utcnow()
+
+        instances = collection.all(cats=['a', 'b'], date=now)
+        assert isinstance(instances, list)
+        assert len(instances) == 1
+        assert instances[0].foo == 'bar'
+        mock.assert_called_with(
+            'GET',
+            '/foo',
+            params={'cats': 'a,b', 'date': now.isoformat()}
+        )
 
 
 class TestCreatable(object):

@@ -168,6 +168,7 @@ class Instance(Resource):
 
 class Retrievable(object):
     """Resource mixin for getting an instance of a resource."""
+
     def get(self, id=None):
         uri = "{}/{}".format(self.uri, id) if id else self.uri
         data, _ = self.request('GET', uri)
@@ -176,13 +177,23 @@ class Retrievable(object):
 
 class Listable(object):
     """Resource mixin for getting all instances of a resource."""
+
+    def format_params(self, **params):
+        """Used to mold the passed parameters into a suitable structure for the
+        request. It's a noop by default.
+
+        """
+        return params
+
     def all(self, **params):
+        params = self.format_params(**params)
         data, _ = self.request('GET', self.uri, params=params)
         return self.make_instance(data)
 
 
 class Creatable(object):
     """Resource mixin that allows for creating a resource."""
+
     def create(self, body):
         data, _ = self.request('POST', self.uri, data=body)
         return self.make_instance(data)
@@ -190,6 +201,7 @@ class Creatable(object):
 
 class Deletable(object):
     """Resource mixin that allows for deleting a resource."""
+
     def delete(self):
         data, status = self.request('DELETE', self.uri)
         return status == 204

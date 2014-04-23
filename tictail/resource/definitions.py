@@ -31,6 +31,11 @@ class Products(Collection, Retrievable, Listable):
     endpoint = 'products'
     instance = Product
 
+    def format_params(self, **params):
+        if 'categories' in params:
+            params['categories'] = ','.join(params['categories'])
+        return params
+
 
 class Card(Instance):
     pass
@@ -57,6 +62,13 @@ class Order(Instance):
 class Orders(Collection, Retrievable, Listable):
     endpoint = 'orders'
     instance = Order
+
+    def format_params(self, **params):
+        if 'modified_before' in params:
+            params['modified_before'] = params['modified_before'].isoformat()
+        if 'modified_after' in params:
+            params['modified_after'] = params['modified_after'].isoformat()
+        return params
 
 
 class Theme(Instance):
