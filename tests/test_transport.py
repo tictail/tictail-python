@@ -20,11 +20,11 @@ class TestTransport(object):
 
         # Leading and trailing slashes should not affect result.
         abs_uri = transport._make_abs_uri('/stores')
-        assert abs_uri == '{}://{}/v{}/stores'.format(protocol, base, version)
+        assert abs_uri == '{0}://{1}/v{2}/stores'.format(protocol, base, version)
         abs_uri = transport._make_abs_uri('stores')
-        assert abs_uri == '{}://{}/v{}/stores'.format(protocol, base, version)
+        assert abs_uri == '{0}://{1}/v{2}/stores'.format(protocol, base, version)
         abs_uri = transport._make_abs_uri('stores/')
-        assert abs_uri == '{}://{}/v{}/stores'.format(protocol, base, version)
+        assert abs_uri == '{0}://{1}/v{2}/stores'.format(protocol, base, version)
 
     def test_utf8(self, transport):
         value = u'ƃäｃòԉ'
@@ -67,7 +67,7 @@ class TestTransport(object):
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
-            'user-agent': "Tictail Python {}".format(__version__)
+            'user-agent': "Tictail Python {0}".format(__version__)
         }
         params = kwargs.get('params')
         data = kwargs.get('data')
@@ -77,7 +77,7 @@ class TestTransport(object):
         content, status = transport.handle_request(method, uri, **kwargs)
         mock.assert_called_with(
             method.lower(),
-            "{}://{}/v{}/{}".format(protocol, base, version, uri),
+            "{0}://{1}/v{2}/{3}".format(protocol, base, version, uri),
             params=params,
             data=data,
             headers=headers,
