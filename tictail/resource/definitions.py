@@ -18,7 +18,7 @@ class Follower(Instance, Deletable):
     pass
 
 
-class Followers(Collection, Listable, Creatable):
+class Followers(Collection, Listable, Creatable, Deletable):
     endpoint = 'followers'
     instance = Follower
 

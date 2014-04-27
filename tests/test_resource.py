@@ -170,19 +170,26 @@ class TestInstance(object):
 
 class TestRetrievable(object):
     class FooCollection(Collection, Retrievable):
+        class FooInstance(Instance, Retrievable):
+            pass
         endpoint = 'foo'
-        instance = Instance
+        instance = FooInstance
 
-    def test_get(self, monkeypatch, transport):
+    @pytest.mark.parametrize('id,expected_uri',[
+        (1, '/foo/1'),
+        (None, '/foo')
+    ])
+    def test_get(self, monkeypatch, transport, id, expected_uri):
         collection = self.FooCollection(transport)
         rv = ({'id': 1, 'foo': 'bar'}, 200)
         mock = MagicMock(return_value=rv)
         monkeypatch.setattr(collection, 'request', mock)
 
-        instance = collection.get(1)
-        assert isinstance(instance, Instance)
+        instance = collection.get(id)
+        assert isinstance(instance, self.FooCollection.FooInstance)
         assert instance.foo == 'bar'
-        mock.assert_called_with('GET', '/foo/1')
+        mock.assert_called_with('GET', expected_uri)
+
 
 class TestListable(object):
     class FooCollection(Collection, Listable):
@@ -266,14 +273,18 @@ class TestDeletable(object):
         endpoint = 'foo'
         instance = FooInstance
 
-    def test_delete_on_collection(self, monkeypatch, transport):
+    @pytest.mark.parametrize('id,expected_uri',[
+        (1, '/foo/1'),
+        (None, '/foo')
+    ])
+    def test_delete_on_collection(self, monkeypatch, transport, id, expected_uri):
         collection = self.FooCollection(transport)
         rv = ({}, 204)
         mock = MagicMock(return_value=rv)
         monkeypatch.setattr(collection, 'request', mock)
 
-        assert collection.delete() is True
-        mock.assert_called_with('DELETE', '/foo')
+        assert collection.delete(id) is True
+        mock.assert_called_with('DELETE', expected_uri)
 
     def test_delete_on_instance(self, monkeypatch, transport):
         collection = self.FooCollection(transport)

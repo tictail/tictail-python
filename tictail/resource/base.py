@@ -202,8 +202,9 @@ class Creatable(object):
 class Deletable(object):
     """Resource mixin that allows for deleting a resource."""
 
-    def delete(self):
-        data, status = self.request('DELETE', self.uri)
+    def delete(self, id=None):
+        uri = "{0}/{1}".format(self.uri, id) if id else self.uri
+        data, status = self.request('DELETE', uri)
         return status == 204
 
 
