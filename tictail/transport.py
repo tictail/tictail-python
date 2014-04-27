@@ -183,7 +183,7 @@ class RequestsHttpTransport(object):
             # `requests` will store an `HTTPError` if one happened.
             resp.raise_for_status()
 
-            content = resp.json()
+            content = resp.json() if resp.text else None
             return content, resp.status_code
         except ConnectionError as ce:
             self._handle_connection_error(ce)

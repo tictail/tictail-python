@@ -47,14 +47,34 @@ class TestTransport(object):
 
         mock.assert_called_with(method, uri, **kwargs)
 
-    @pytest.mark.parametrize('call_params', [
-        ('GET', 'foo', {'params': u'Båｃòԉ'}),
-        ('POST', 'foo', {'params': 'bar', 'data': {'foo': u'Båｃòԉ'}}),
-        ('DELETE', 'foo', {'params': 'bar'}),
-        ('PUT', 'foo', {'params': 'bar', 'data': {'foo': 'bar'}})
+    @pytest.mark.parametrize('call_params,resp', [
+        (
+            ('GET', 'foo', {'params': u'Båｃòԉ'}),
+            ('{"foo": "bar"}', {'foo': 'bar'}, 200),
+        ),
+        (
+            ('POST', 'foo', {'params': 'bar', 'data': {'foo': u'Båｃòԉ'}}),
+            ('{"foo": "bar"}', {'foo': 'bar'}, 201),
+        ),
+        (
+            ('DELETE', 'foo', {'params': 'bar'}),
+            ('', None, 204),
+        ),
+        (
+            ('PUT', 'foo', {'params': 'bar', 'data': {'foo': 'bar'}}),
+            ('{"foo": "bar"}', {'foo': 'bar'}, 200),
+        )
     ])
-    def test_handle_request(self, monkeypatch, transport, call_params):
-        mock = MagicMock()
+    def test_handle_request(self, monkeypatch, transport, call_params, resp):
+        # Fake a response from the API.
+        resp_text, resp_json, resp_status = resp
+        mock_request = MagicMock()
+        mock_request.text = resp_text
+        mock_request.status_code = resp_status
+        mock_request.json = MagicMock(return_value=resp_json)
+
+        mock = MagicMock(return_value=mock_request)
+
         method, uri, kwargs = call_params
 
         monkeypatch.setattr('tictail.transport.requests.request', mock)
@@ -75,6 +95,9 @@ class TestTransport(object):
             data = json.dumps(data)
 
         content, status = transport.handle_request(method, uri, **kwargs)
+        assert content == resp_json
+        assert status == resp_status
+
         mock.assert_called_with(
             method.lower(),
             "{0}://{1}/v{2}/{3}".format(protocol, base, version, uri),
