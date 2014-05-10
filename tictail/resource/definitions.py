@@ -60,11 +60,21 @@ class Order(Resource, GetById):
 class Orders(Collection, GetById, List):
     resource = Order
 
+    def _isoformat(self, dt):
+        try:
+            return dt.isoformat()
+        except AttributeError:
+            return dt
+
     def format_params(self, **params):
-        if 'modified_before' in params:
-            params['modified_before'] = params['modified_before'].isoformat()
-        if 'modified_after' in params:
-            params['modified_after'] = params['modified_after'].isoformat()
+        modified_before = params.get('modified_before')
+        if modified_before:
+            params['modified_before'] = self._isoformat(modified_before)
+
+        modified_after = params.get('modified_after')
+        if modified_after:
+            params['modified_after'] = self._isoformat(modified_after)
+
         return params
 
 
