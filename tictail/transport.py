@@ -61,8 +61,8 @@ class RequestsHttpTransport(object):
         status_code = resp.status_code
 
         try:
-            jsonresp = resp.json()
-            message = jsonresp.get('message')
+            resp_json = resp.json()
+            message = resp_json.get('message')
         except ValueError:
             # If we can't read JSON from the error response, then something is
             # obviously wrong. Check for Bad Gateway errors first, otherwise
@@ -74,7 +74,7 @@ class RequestsHttpTransport(object):
                 message = ('An unexpected error occured. Please contact Tictail '
                            'Support if the problem persists.')
 
-            raise ServerError(message, status_code, None)
+            raise ServerError(message, status_code, resp.text)
 
         # Raise appropriate exception for 400, 403, 404 and 422, and a generic
         # error for all other error codes.
@@ -89,7 +89,7 @@ class RequestsHttpTransport(object):
         else:
             err_cls = ServerError
 
-        raise err_cls(message, status_code, json.dumps(jsonresp))
+        raise err_cls(message, status_code, resp.text, json=resp_json)
 
     def _handle_unexpected_error(self, err):
         if isinstance(err, ValueError):
