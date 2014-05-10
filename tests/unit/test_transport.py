@@ -68,22 +68,23 @@ class TestTransport(object):
     def test_handle_request(self, monkeypatch, transport, call_params, resp):
         # Fake a response from the API.
         resp_text, resp_json, resp_status = resp
-        mock_request = MagicMock()
-        mock_request.text = resp_text
-        mock_request.status_code = resp_status
-        mock_request.json = MagicMock(return_value=resp_json)
 
-        mock = MagicMock(return_value=mock_request)
+        mock_response = MagicMock()
+        mock_response.text = resp_text
+        mock_response.status_code = resp_status
+        mock_response.json = MagicMock(return_value=resp_json)
+
+        mock_request = MagicMock(return_value=mock_response)
 
         method, uri, kwargs = call_params
 
-        monkeypatch.setattr('tictail.transport.requests.request', mock)
+        monkeypatch.setattr('tictail.transport.requests.request', mock_request)
 
         base = transport.config['base']
         protocol = transport.config['protocol']
         version = transport.config['version']
         headers = {
-            'authorization': 'Bearer test',
+            'authorization': 'Bearer accesstoken_54AL94jiZZQrvnfuxbSJQsImkoOHzs',
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
@@ -98,7 +99,7 @@ class TestTransport(object):
         assert content == resp_json
         assert status == resp_status
 
-        mock.assert_called_with(
+        mock_request.assert_called_with(
             method.lower(),
             "{0}://{1}/v{2}/{3}".format(protocol, base, version, uri),
             params=params,
@@ -117,11 +118,11 @@ class TestTransport(object):
         error_cls, error_handler = input
         error = error_cls()
 
-        mock_resp = MagicMock()
-        mock_resp.raise_for_status = MagicMock(side_effect=error)
-        error.response = mock_resp
+        mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock(side_effect=error)
+        error.response = mock_response
 
-        mock_request = MagicMock(return_value=mock_resp)
+        mock_request = MagicMock(return_value=mock_response)
         mock_error_handler = MagicMock()
 
         monkeypatch.setattr(transport, error_handler, mock_error_handler)
@@ -142,17 +143,19 @@ class TestTransport(object):
     def test_handle_http_error(self, transport, input):
         status, error_cls = input
 
-        error_body = {
+        error_body_json = {
             'message': 'error message',
             'support_email': 'support@tictail.com'
         }
+        error_body_text = json.dumps(error_body_json)
 
-        mock = MagicMock()
-        mock.status_code = status
-        mock.json.return_value = error_body
+        mock_response = MagicMock()
+        mock_response.status_code = status
+        mock_response.text = error_body_text
+        mock_response.json.return_value = error_body_json
 
         error = HTTPError('error message', status)
-        error.response = mock
+        error.response = mock_response
 
         with pytest.raises(error_cls) as excinfo:
             transport._handle_http_error(error)
@@ -160,7 +163,8 @@ class TestTransport(object):
         err = excinfo.value
         assert err.message == 'error message'
         assert err.status == status
-        assert err.response == json.dumps(error_body)
+        assert err.raw == error_body_text
+        assert err.json == error_body_json
 
     @pytest.mark.parametrize('input', [
         (502, 'API is unreachable'),
@@ -171,9 +175,10 @@ class TestTransport(object):
 
         mock = MagicMock()
         mock.status_code = status
+        mock.text = 'error response'
         mock.json.side_effect = ValueError
 
-        error = HTTPError('error message', status)
+        error = HTTPError('error response', status)
         error.response = mock
 
         with pytest.raises(ServerError) as excinfo:
@@ -182,7 +187,8 @@ class TestTransport(object):
         err = excinfo.value
         assert error_string in err.message
         assert err.status == status
-        assert err.response is None
+        assert err.raw is 'error response'
+        assert err.json is None
 
     def test_handle_unexpected_error(self, transport):
         mock = MagicMock()
@@ -201,4 +207,5 @@ class TestTransport(object):
         assert 'should return JSON' in err.message
         assert 'text/html' in err.message
         assert err.status == 500
-        assert err.response is 'text response'
+        assert err.raw is 'text response'
+        assert err.json is None

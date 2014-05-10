@@ -9,3 +9,11 @@ clean: clean-pyc
 test: clean
 	coverage run --source tictail -m py.test -s
 	coverage report -m
+
+test-unit: clean
+	coverage run --source tictail -m py.test tests/unit -s
+	coverage report -m
+
+test-integration: clean
+	coverage run --source tictail -m py.test tests/integration -s
+	coverage report -m

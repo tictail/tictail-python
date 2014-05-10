@@ -13,7 +13,7 @@ from tictail import Tictail
 
 @pytest.fixture(scope='function')
 def client():
-    return Tictail('test')
+    return Tictail('accesstoken_54AL94jiZZQrvnfuxbSJQsImkoOHzs')
 
 
 @pytest.fixture(scope='function')
