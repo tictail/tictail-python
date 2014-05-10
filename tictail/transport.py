@@ -12,7 +12,6 @@ from .version import __version__
 from .importer import json, requests
 from .errors import (ApiConnectionError,
                      ApiError,
-                     ValidationError,
                      Forbidden,
                      NotFound,
                      BadRequest,
@@ -76,16 +75,14 @@ class RequestsHttpTransport(object):
 
             raise ServerError(message, status_code, resp.text)
 
-        # Raise appropriate exception for 400, 403, 404 and 422, and a generic
-        # error for all other error codes.
+        # Raise appropriate exception for 400, 403, 404, and a generic error
+        # for all other error codes.
         if status_code == 400:
             err_cls = BadRequest
         elif status_code == 403:
             err_cls = Forbidden
         elif status_code == 404:
             err_cls = NotFound
-        elif status_code == 422:
-            err_cls = ValidationError
         else:
             err_cls = ServerError
 

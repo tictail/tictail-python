@@ -41,11 +41,6 @@ class ApiError(Exception):
         return repr(self)
 
 
-class ValidationError(ApiError):
-    """Thrown for 422 errors."""
-    pass
-
-
 class Forbidden(ApiError):
     """Thrown for 403 errors, i.e auth issues."""
     pass
@@ -67,6 +62,6 @@ class ServerError(ApiError):
 
 
 __all__ = [
-    'ApiError', 'ApiConnectionError', 'ValidationError', 'Forbidden',
-    'NotFound', 'BadRequest', 'ServerError'
+    'ApiError', 'ApiConnectionError', 'Forbidden', 'NotFound',
+    'BadRequest', 'ServerError'
 ]
