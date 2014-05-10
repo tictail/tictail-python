@@ -2,20 +2,14 @@
 tictail.resource.base
 ~~~~~~~~~~~~~~~~~~~~~
 
-Base definitions for `Collection` and `Instance`. They follow a hierarchical and
-recursive structure with `Collection` being the parent and `Instance` the child.
-
-`Instance` objects can include `Collection` objects as subresources, which in turn
-are parents for their own `Instance` objects. Just like Inception.
+Definitions for `Resource` and `Collection` with their corresponding capability
+mixins.
 
 """
 
-from itertools import izip
-
-
-class Resource(object):
-    def __init__(self, transport):
-        """Initializes the base `Resource` class.
+class ApiObject(object):
+    def __init__(self, transport, parent=None):
+        """Initializes the base `ApiObject` class.
 
         :param transport: An instance of the transport strategy.
 
@@ -23,11 +17,19 @@ class Resource(object):
         self.transport = transport
 
     @property
-    def _name(self):
+    def attr_name(self):
+        """Returns a string used when attaching this `ApiObject` as a property
+        on another object.
+
+        """
         return self.__class__.__name__.lower()
 
     def _remove_slashes(self, url):
-        """Removes leading and trailing slashes from the url `fragment`."""
+        """Removes leading and trailing slashes from the url `fragment`.
+
+        :param url: A url string.
+
+        """
         if not url:
             return url
         start = 1 if url[0] == '/' else None
@@ -35,61 +37,36 @@ class Resource(object):
         return url[start:end]
 
     def request(self, method, uri, **kwargs):
+        """Performs an HTTP request using the underlying transport.
+
+        :param method: The HTTP method.
+        :param uri: The resource uri.
+        :param kwargs: Pass-through parameters to the transport method.
+
+        """
         method = method.lower()
         http_method = getattr(self.transport, method)
         return http_method(uri, **kwargs)
 
 
-class Collection(Resource):
-    """Represents a collection resource. Expects `endpoint` and `instance` to
-    be defined as static properties.
-
-    """
-    instance = None
-    endpoint = None
-
-    def __init__(self, transport, prefix=''):
-        """Initializes an API collection resource.
-
-        :param transport: An instance of the transport strategy.
-        :param prefix: An optional prefix to be attached to the `endpoint`.
-
-        """
-        super(Collection, self).__init__(transport)
-        self.prefix = prefix
-
-    @property
-    def uri(self):
-        endpoint = self._remove_slashes(self.endpoint)
-        if not self.prefix:
-            return "/{0}".format(endpoint)
-        prefix = self._remove_slashes(self.prefix)
-        return "/{0}/{1}".format(prefix, endpoint)
-
-    def make_instance(self, data):
-        """Makes an instance (or a list of instances) of this resource from
-        the given `data` using the `instance` class property.
-
-        :param data: A dict or list of dicts.
-
-        """
-        if isinstance(data, list):
-            return [self.instance(d, self.uri, self.transport) for d in data]
-        else:
-            return self.instance(data, self.uri, self.transport)
+# =================
+# Basic API objects
+# =================
 
 
-class Instance(Resource):
-    """A single instance of an API resource."""
+class Resource(ApiObject):
+    """Describes an API resource."""
 
     # A set of attributes that should not be included in this instance's data.
-    # Note: `transport` is inherited from `Resource`.
+    # Note: `transport` is inherited from `ApiObject`.
     _internal_attrs = set([
         'transport',
-        'parent_uri',
+        'parent',
         'subresources',
         'identifier',
-        '_data_keys'
+        '_data_keys',
+        'singleton',
+        'endpoint'
     ])
 
     # A list of `Resource` objects, that will be instantiated as subresources.
@@ -98,17 +75,26 @@ class Instance(Resource):
     # The name of the primary key for this instance.
     identifier = 'id'
 
-    def __init__(self, data, parent_uri, transport):
-        """Initializes this instance.
+    # The endpoint of this resource.
+    endpoint = None
 
-        :param data: A dict of data for this instance.
-        :param parent_uri: This instance's parent resource URI.
+    # Marks this resource as singleton. A singleton resource can be fetched
+    # without a primary key e.g /stores/1/theme.
+    singleton = False
+
+    def __init__(self, transport, data=None, parent=None):
+        """Initializes this resource.
+
+        :param transport: An instance of the transport strategy.
+        :param data: A optional dict of data for this resource.
+        :param parent: An optional parent prefix to be attached to this
+        resource's uri.
 
         """
         self._data_keys = set()
-        self.parent_uri = parent_uri
+        self.parent = parent
 
-        super(Instance, self).__init__(transport)
+        super(Resource, self).__init__(transport)
 
         if data is None:
             data = {}
@@ -123,42 +109,58 @@ class Instance(Resource):
         if k not in self._internal_attrs:
             self._data_keys.add(k)
 
-    def instantiate_subresources(self):
-        """Instantiates all subresources and attaches them as properties on this
-        `instance`. For now, only `Collection` subresources are supported.
-
-        """
-        for sub in self.subresources:
-            inst = sub(self.transport, prefix=self.uri)
-            self._internal_attrs.add(inst._name)
-            setattr(self, inst._name, inst)
-
     @property
     def pk(self):
         identifier = self.identifier
         if not hasattr(self, identifier):
-            raise ValueError('This instance does not have a primary key value.')
+            raise ValueError(
+                "This instance does not have a property '{0}' for primary key."
+                .format(identifier)
+            )
         return getattr(self, identifier)
 
     @property
     def uri(self):
-        parent_uri = self._remove_slashes(self.parent_uri)
-        return "/{0}/{1}".format(parent_uri, self.pk)
+        uri = ''
 
-    def keys(self):
+        if self.parent:
+            parent = self._remove_slashes(self.parent)
+            uri += "/{0}".format(parent)
+
+        uri += "/{0}".format(self.endpoint)
+
+        if not self.singleton:
+            uri += "/{0}".format(self.pk)
+
+        return uri
+
+    def instantiate_subresources(self):
+        """Instantiates all subresources which are attached as properties."""
+        for sub in self.subresources:
+            inst = sub(self.transport, parent=self.uri)
+            self._internal_attrs.add(inst.attr_name)
+            setattr(self, inst.attr_name, inst)
+
+    def instantiate_from_data(self, data):
+        """Returns an instance of this `Resource` with the given `data`.
+
+        :param data: A data dictionary.
+
+        """
+        return self.__class__(self.transport, data=data, parent=self.parent)
+
+    def data_keys(self):
         return list(self._data_keys)
 
-    def values(self):
-        return [getattr(self, k) for k in self.keys()]
+    def data_values(self):
+        return [getattr(self, k) for k in self.data_keys()]
 
-    def items(self):
-        return zip(self.keys(), self.values())
-
-    def iteritems(self):
-        return izip(self.keys(), self.values())
+    def data_items(self):
+        return zip(self.data_keys(), self.data_values())
 
     def to_dict(self):
-        return dict(self.items())
+        items = list(self.data_items())
+        return dict(items)
 
     def __repr__(self):
         import pprint
@@ -166,49 +168,90 @@ class Instance(Resource):
         return "{0}({1})".format(name, pprint.pformat(self.to_dict()))
 
 
-class Retrievable(object):
-    """Resource mixin for getting an instance of a resource."""
+class Collection(ApiObject):
+    """Represents a collection of resources."""
 
-    def get(self, id=None):
-        uri = "{0}/{1}".format(self.uri, id) if id else self.uri
-        data, _ = self.request('GET', uri)
-        return self.make_instance(data)
+    # The Resource class for this collection.
+    resource = None
 
+    def __init__(self, transport, parent=None):
+        """Initializes an API collection resource.
 
-class Listable(object):
-    """Resource mixin for getting all instances of a resource."""
-
-    def format_params(self, **params):
-        """Used to mold the passed parameters into a suitable structure for the
-        request. It's a noop by default.
+        :param transport: An instance of the transport strategy.
+        :param parent: An optional parent prefix to be attached to this
+        collection's uri.
 
         """
+        super(Collection, self).__init__(transport)
+        self.parent = parent
+
+    @property
+    def uri(self):
+        endpoint = self._remove_slashes(self.resource.endpoint)
+        if not self.parent:
+            return "/{0}".format(endpoint)
+        parent = self._remove_slashes(self.parent)
+        return "/{0}/{1}".format(parent, endpoint)
+
+    def instantiate_from_data(self, data):
+        """Returns an instance or list of instances of the `Resource` class for
+        this collection.
+
+        :param data: A data dictionary or a list of data dictionaries.
+
+        """
+        maker = lambda d: self.resource(self.transport, data=d, parent=self.parent)
+        return map(maker, data) if isinstance(data, list) else maker(data)
+
+
+# ============
+# Capabilities
+# ============
+
+
+class Get(object):
+    def get(self):
+        data, _ = self.request('GET', self.uri)
+        return self.instantiate_from_data(data)
+
+
+class GetById(object):
+    def get(self, id):
+        uri = "{0}/{1}".format(self.uri, id)
+        data, _ = self.request('GET', uri)
+        return self.instantiate_from_data(data)
+
+
+class List(object):
+    def format_params(self, **params):
         return params
 
     def all(self, **params):
         params = self.format_params(**params)
         data, _ = self.request('GET', self.uri, params=params)
-        return self.make_instance(data)
+        return self.instantiate_from_data(data)
 
 
-class Creatable(object):
-    """Resource mixin that allows for creating a resource."""
-
+class Create(object):
     def create(self, body):
         data, _ = self.request('POST', self.uri, data=body)
-        return self.make_instance(data)
+        return self.instantiate_from_data(data)
 
 
-class Deletable(object):
-    """Resource mixin that allows for deleting a resource."""
+class Delete(object):
+    def delete(self):
+        data, status = self.request('DELETE', self.uri)
+        return status == 204
 
-    def delete(self, id=None):
-        uri = "{0}/{1}".format(self.uri, id) if id else self.uri
+
+class DeleteById(object):
+    def delete(self, id):
+        uri = "{0}/{1}".format(self.uri, id)
         data, status = self.request('DELETE', uri)
         return status == 204
 
 
-__all__ = (
-    'Resource', 'Collection', 'Instance', 'Retrievable',
-    'Listable', 'Creatable', 'Deletable'
-)
+__all__ = [
+    'ApiObject', 'Resource', 'Collection', 'Get', 'GetById', 'List', 'Create',
+    'Delete', 'DeleteById'
+]

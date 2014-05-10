@@ -7,13 +7,14 @@ tictail.client
 import copy
 
 from .transport import RequestsHttpTransport
-from .resource import (Followers,
+from .resource import (Store,
+                       Followers,
                        Cards,
                        Customers,
                        Products,
                        Orders,
                        Stores,
-                       Themes,
+                       Theme,
                        Categories,
                        Me)
 
@@ -63,13 +64,11 @@ class Client(object):
     def _make_transport(self):
         return RequestsHttpTransport(self.access_token, self.config)
 
-    def _make_shortcut(self, resource_cls, store_id):
+    def _make_store_subresource(self, resource_cls, store_id):
         if store_id is None:
             raise ValueError('`store_id` cannot be None')
-        prefix = "{0}/{1}".format(Stores.endpoint, store_id)
-        return resource_cls(self.transport, prefix=prefix)
-
-    # ====== Root Endpoints ====== #
+        parent = "{0}/{1}".format(Store.endpoint, store_id)
+        return resource_cls(self.transport, parent=parent)
 
     def me(self):
         """Alias for getting the store for which the access token you are using
@@ -77,69 +76,70 @@ class Client(object):
 
         >>> tt = Tictail('token')
         >>> tt.me()
-        {...}
+        Store({...})
 
         """
         return Me(self.transport).get()
 
-    @property
+    # ====== Resource factories ======= #
+
     def stores(self):
+        """Returns a `Stores` collection."""
         return Stores(self.transport)
 
-    # ====== Shortcuts ======= #
 
     def followers(self, store=None):
-        """Returns a `Followers` resource.
+        """Returns a `Followers` collection.
 
         :param store: A store id.
 
         """
-        return self._make_shortcut(Followers, store)
+        return self._make_store_subresource(Followers, store)
 
     def cards(self, store=None):
-        """Returns a `Card` resource.
+        """Returns a `Cards` collection.
 
         :param store: A store id.
 
         """
-        return self._make_shortcut(Cards, store)
+        return self._make_store_subresource(Cards, store)
 
     def customers(self, store=None):
-        """Returns a `Customers` resource.
+        """Returns a `Customers` collection.
 
         :param store: A store id.
 
         """
-        return self._make_shortcut(Customers, store)
+        return self._make_store_subresource(Customers, store)
 
     def products(self, store=None):
-        """Returns a `Products` resource.
+        """Returns a `Products` collection.
 
         :param store: A store id.
 
         """
-        return self._make_shortcut(Products, store)
+        return self._make_store_subresource(Products, store)
 
     def orders(self, store=None):
-        """Returns an `Orders` resource.
+        """Returns an `Orders` collection.
 
         :param store: A store id.
 
         """
-        return self._make_shortcut(Orders, store)
+        return self._make_store_subresource(Orders, store)
 
     def theme(self, store=None):
-        """Returns a `Themes` resource.
+        """Returns a `Theme` resource.
 
         :param store: A store id.
 
         """
-        return self._make_shortcut(Themes, store)
+        return self._make_store_subresource(Theme, store)
 
     def categories(self, store=None):
-        """Returns a `Categories` resource.
+        """Returns a `Categories` collection.
 
         :param store: A store id.
 
         """
-        return self._make_shortcut(Categories, store)
+        return self._make_store_subresource(Categories, store)

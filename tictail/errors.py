@@ -7,7 +7,7 @@ Custom exception classes.
 """
 
 class ApiConnectionError(Exception):
-    """Thrown if there was a problem with connecting to the api."""
+    """Thrown if there was a problem with connecting to the API."""
     pass
 
 

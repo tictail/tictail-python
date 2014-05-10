@@ -37,11 +37,11 @@ class TestClient(object):
         assert client.config['version'] == 2
         assert client.config['base'] == DEFAULT_CONFIG['base']
 
-    def test_make_shortcut(self, client):
+    def test_make_store_subresource(self, client):
         with pytest.raises(ValueError):
-            client._make_shortcut(Cards, None)
+            client._make_store_subresource(Cards, None)
 
-        resource = client._make_shortcut(Cards, 1)
+        resource = client._make_store_subresource(Cards, 1)
         assert resource.uri == '/stores/1/cards'
 
     @pytest.mark.parametrize('method,expected_uri', [
@@ -51,7 +51,7 @@ class TestClient(object):
         ('products', '/stores/1/products'),
         ('orders', '/stores/1/orders'),
     ])
-    def test_default_shortcuts(self, client, method, expected_uri):
+    def test_default_factories(self, client, method, expected_uri):
         shortcut = getattr(client, method)
         resource = shortcut(1)
         assert resource.uri == expected_uri

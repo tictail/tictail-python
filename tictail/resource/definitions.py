@@ -7,29 +7,29 @@ Definitions for all API endpoints and their corresponding instances.
 """
 
 from .base import (Collection,
-                   Instance,
-                   Retrievable,
-                   Listable,
-                   Creatable,
-                   Deletable)
+                   Resource,
+                   Get,
+                   GetById,
+                   List,
+                   Create,
+                   Delete,
+                   DeleteById)
 
 
-class Follower(Instance, Deletable):
-    pass
-
-
-class Followers(Collection, Listable, Creatable, Deletable):
+class Follower(Resource, Delete):
     endpoint = 'followers'
-    instance = Follower
 
 
-class Product(Instance):
-    pass
+class Followers(Collection, List, Create, DeleteById):
+    resource = Follower
 
 
-class Products(Collection, Retrievable, Listable):
+class Product(Resource, Get):
     endpoint = 'products'
-    instance = Product
+
+
+class Products(Collection, GetById, List):
+    resource = Product
 
     def format_params(self, **params):
         if 'categories' in params:
@@ -37,31 +37,28 @@ class Products(Collection, Retrievable, Listable):
         return params
 
 
-class Card(Instance):
-    pass
-
-
-class Cards(Collection, Creatable):
+class Card(Resource):
     endpoint = 'cards'
-    instance = Card
 
 
-class Customer(Instance):
-    pass
+class Cards(Collection, Create):
+    resource = Card
 
 
-class Customers(Collection, Retrievable, Listable):
+class Customer(Resource, Get):
     endpoint = 'customers'
-    instance = Customer
 
 
-class Order(Instance):
-    pass
+class Customers(Collection, GetById, List):
+    resource = Customer
 
 
-class Orders(Collection, Retrievable, Listable):
+class Order(Resource, GetById):
     endpoint = 'orders'
-    instance = Order
+
+
+class Orders(Collection, GetById, List):
+    resource = Order
 
     def format_params(self, **params):
         if 'modified_before' in params:
@@ -71,61 +68,46 @@ class Orders(Collection, Retrievable, Listable):
         return params
 
 
-class Theme(Instance):
-    pass
-
-
-class Themes(Collection, Retrievable):
+class Theme(Resource, Get):
     endpoint = 'theme'
-    instance = Theme
-
-    @property
-    def _name(self):
-        # Themes are exposed as a singleton collection on a store, under the
-        # `theme` property.
-        return 'theme'
+    singleton = True
 
 
-class Category(Instance):
-    pass
-
-
-class Categories(Collection, Listable):
+class Category(Resource):
     endpoint = 'categories'
-    instance = Category
 
 
-class Store(Instance):
+class Categories(Collection, List):
+    resource = Category
+
+
+class Store(Resource, Get):
+    endpoint = 'stores'
     subresources = [
         Cards,
         Products,
         Customers,
         Followers,
         Orders,
-        Themes,
+        Theme,
         Categories
     ]
 
 
-class Stores(Collection, Retrievable):
-    endpoint = 'stores'
-    instance = Store
+class Stores(Collection, GetById):
+    resource = Store
 
 
-class Me(Collection, Retrievable):
-    """This is a convenient alias to the /stores collection that returns the
-    currently authenticated store without needing an identifier.
-
-    """
+class Me(Store, Get):
     endpoint = 'me'
-    instance = Store
+    singleton = True
 
-    def make_instance(self, data):
-        return self.instance(data, 'stores', self.transport)
+    def instantiate_from_data(self, data):
+        return Store(self.transport, data=data)
 
 
-__all__ = (
+__all__ = [
     'Follower', 'Followers', 'Product', 'Products', 'Card', 'Cards',
-    'Customer', 'Customers', 'Order', 'Orders', 'Theme', 'Themes',
-    'Category', 'Categories', 'Store', 'Stores', 'Me'
-)
+    'Customer', 'Customers', 'Order', 'Orders', 'Theme', 'Category',
+    'Categories', 'Store', 'Stores', 'Me'
+]
