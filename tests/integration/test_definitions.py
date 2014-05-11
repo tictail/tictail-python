@@ -96,8 +96,9 @@ class TestFollower(object):
         assert follower.email == 'm8r-fixc0m@mailinator.com'
         assert collection.delete(follower.id)
 
+    @pytest.mark.travis_race_condition
     def test_get_all(self, client, me):
-        me.followers.create({'email': 'm8r-fixc0m@mailinator.com'})
+        me.followers.create({'email': 'qwr-fixc0m@mailinator.com'})
 
         collection = client.followers(store='KGu')
         followers = collection.all()
@@ -108,17 +109,33 @@ class TestFollower(object):
 
         follower = followers[0]
         assert isinstance(follower, Follower)
-        assert follower.email == 'm8r-fixc0m@mailinator.com'
+        assert follower.email == 'qwr-fixc0m@mailinator.com'
 
-        me.followers.delete(follower.id)
+        assert me.followers.delete(follower.id)
 
+    @pytest.mark.travis_race_condition
     def test_get_all_after(self, me):
-        followers = me.followers.all(after='4EaL')
-        assert not followers
+        first = me.followers.create({'email': 'tyc-fixc0m@mailinator.com'})
+        second = me.followers.create({'email': '71z-fixc0m@mailinator.com'})
+        followers = me.followers.all(after=first.id)
 
+        assert len(followers) == 1
+        assert followers[0].id == second.id
+
+        assert me.followers.delete(first.id)
+        assert me.followers.delete(second.id)
+
+    @pytest.mark.travis_race_condition
     def test_get_all_before(self, me):
-        followers = me.followers.all(before='4EaL')
-        assert not followers
+        first = me.followers.create({'email': 'nhg-fixc0m@mailinator.com'})
+        second = me.followers.create({'email': 'kiu-fixc0m@mailinator.com'})
+
+        followers = me.followers.all(before=second.id)
+        assert len(followers) == 1
+        assert followers[0].id == first.id
+
+        assert me.followers.delete(first.id)
+        assert me.followers.delete(second.id)
 
 
 class TestTheme(object):

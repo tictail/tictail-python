@@ -17,3 +17,7 @@ test-unit: clean
 test-integration: clean
 	coverage run --source tictail -m py.test tests/integration -s
 	coverage report -m
+
+test-travis: clean
+	coverage run --source tictail -m py.test -s -m "not travis_race_condition"
+	coverage report -m
