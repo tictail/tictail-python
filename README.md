@@ -3,7 +3,7 @@ tictail-python
 
 [![Build Status](https://travis-ci.org/tictail/tictail-python.svg?branch=master)](https://travis-ci.org/tictail/tictail-python)
 
-Python bindings for the Tictail API ([documentation](https://tictail.com/developers/documentation/api-reference/)).
+Python bindings for the Tictail API ([API reference](https://tictail.com/developers/documentation/api-reference/)).
 
 ### Installation
 
