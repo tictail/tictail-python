@@ -179,6 +179,9 @@ class TestOrder(object):
         assert order.id == 'aFQX'
         assert order.price == 0
         assert order.transaction['status'] == 'paid'
+        assert len(order.items) == 1
+        assert order.items[0]['product']['title'] == 'Tictail Python Test Product'
+        assert order.items[0]['product']['id'] == '9cVh'
 
     def test_get_all_before(self, me):
         orders = me.orders.all(after='aFQX')
