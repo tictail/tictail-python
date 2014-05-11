@@ -25,7 +25,6 @@ class ApiError(Exception):
 
         """
         super(ApiError, self).__init__(message)
-        self.message = message
         self.status = status
         self.raw = raw
         self.json = json
