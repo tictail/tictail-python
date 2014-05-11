@@ -313,11 +313,12 @@ An example response:
 ```python
 >>> print follower
 Follower({
-  'created_at': '2013-12-10T19:31:07',
+  'created_at': u'2013-12-10T19:31:07',
   'modified_at': None,
-  'email': 'johndoe@example.com',
-  'id': 'NZUr'
+  'email': u'johndoe@example.com',
+  'id': u'NZUr'
 })
+```
 
 #### Order
 
@@ -374,17 +375,32 @@ An example (partial) response:
 ```python
 >>> print order
 Order({
-  'customer': {...},
-  'transaction': {...},
+  'customer': {
+    'name': u'John Doe',
+    ...
+  },
+  'transaction': {
+    'status': u'paid',
+    ...
+  },
   'prices_include_vat': True,
   'discounts': [],
-  'items': [{...}],
-  'fullfilment': {...},
+  'items': [{
+    'currency': u'SEK',
+    'price': 0,
+    ...
+  },
+  ...
+  ],
+  'fullfilment': {
+    'status': u'unhandled',
+    ...
+  },
   'price': 0,
-  'id': 'aFQX',
+  'id': u'aFQX',
   'vat': {
     'price': 0,
-    'rate': '0.250000'
+    'rate': u'0.250000'
   }
 })
 ```
