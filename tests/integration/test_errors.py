@@ -46,7 +46,7 @@ class TestErrors(object):
         try:
             collection = client.followers(store='KGu')
             collection.create({})
-            assert False, 'Using a non-existent id, should throw `errors.NotFound`.'
+            assert False, 'Skipping a required field, should throw `errors.BadRequest`.'
         except errors.BadRequest as err:
             assert err.status == 400
             assert err.json == {

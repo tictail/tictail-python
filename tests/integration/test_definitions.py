@@ -97,6 +97,8 @@ class TestFollower(object):
         assert collection.delete(follower.id)
 
     def test_get_all(self, client, me):
+        me.followers.create({'email': 'm8r-fixc0m@mailinator.com'})
+
         collection = client.followers(store='KGu')
         followers = collection.all()
         assert len(followers) == 1
@@ -106,7 +108,9 @@ class TestFollower(object):
 
         follower = followers[0]
         assert isinstance(follower, Follower)
-        assert follower.email == 'tictailpython@mailinator.com'
+        assert follower.email == 'm8r-fixc0m@mailinator.com'
+
+        me.followers.delete(follower.id)
 
     def test_get_all_after(self, me):
         followers = me.followers.all(after='4EaL')
