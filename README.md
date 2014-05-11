@@ -105,7 +105,7 @@ Store({
   'logotype': [...],
   'name': u'The Startup Store',
   'sandbox': False,
-  'storekeeper_email': u'birk@tictail.com',
+  'storekeeper_email': u'johndoe@example.com',
   'url': u'http://thestartupstore.tictail.com'
 })
 ```
@@ -253,7 +253,7 @@ An example response:
 Customer({
  'country': u'SE',
  'created_at': u'2012-12-10T19:31:07',
- 'email': u'johndoe@gmail.com',
+ 'email': u'johndoe@example.com',
  'id': u'bz21',
  'language': u'en',
  'modified_at': None,
@@ -308,6 +308,17 @@ store = client.me()
 followers = store.followers.all()
 ```
 
+An example response:
+
+```python
+>>> print follower
+Follower({
+  'created_at': '2013-12-10T19:31:07',
+  'modified_at': None,
+  'email': 'johndoe@example.com',
+  'id': 'NZUr'
+})
+
 #### Order
 
 Reference: [Order](https://tictail.com/developers/documentation/api-reference/#Order)
@@ -356,6 +367,26 @@ from tictail import Tictail
 client = Tictail('<access_token>')
 store = client.me()
 order = store.orders.get('aFQX')
+```
+
+An example (partial) response:
+
+```python
+>>> print order
+Order({
+  'customer': {...},
+  'transaction': {...},
+  'prices_include_vat': True,
+  'discounts': [],
+  'items': [{...}],
+  'fullfilment': {...},
+  'price': 0,
+  'id': 'aFQX',
+  'vat': {
+    'price': 0,
+    'rate': '0.250000'
+  }
+})
 ```
 
 #### Theme
@@ -421,7 +452,7 @@ An example (partial) response:
   'modified_at': None,
   'parent_id': u'dn',
   'position': 1,
-  'title': u'Bloglovin'
+  'title': u'DevAwsmbx'
  })
  ...
 ]
