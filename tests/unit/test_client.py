@@ -8,16 +8,16 @@ from tictail.resource import Cards
 
 class TestClient(object):
 
-    def test_construction(self, client):
-        assert client.access_token == 'accesstoken_54AL94jiZZQrvnfuxbSJQsImkoOHzs'
+    def test_construction(self, test_token, client):
+        assert client.access_token == test_token
         assert client.transport is not None
         assert client.config is not None
         assert client.config == DEFAULT_CONFIG
 
-    def test_make_transport(self, client):
+    def test_make_transport(self, test_token, client):
         transport = client._make_transport()
         assert transport.config == DEFAULT_CONFIG
-        assert transport.access_token == 'accesstoken_54AL94jiZZQrvnfuxbSJQsImkoOHzs'
+        assert transport.access_token == test_token
 
     def test_make_config(self, client):
         config = client._make_config({

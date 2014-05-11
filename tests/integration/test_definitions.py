@@ -13,8 +13,10 @@ from tictail.resource import (Store,
 
 
 @pytest.fixture(scope='module')
-def me():
-    client = Tictail('accesstoken_54AL94jiZZQrvnfuxbSJQsImkoOHzs')
+def me(test_token):
+    # We need to recreate the client here since we need a broader session than
+    # the `client` fixture (module vs function).
+    client = Tictail(test_token)
     return client.me()
 
 

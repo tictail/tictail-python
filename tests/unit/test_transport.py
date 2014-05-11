@@ -65,7 +65,7 @@ class TestTransport(object):
             ('{"foo": "bar"}', {'foo': 'bar'}, 200),
         )
     ])
-    def test_handle_request(self, monkeypatch, transport, call_params, resp):
+    def test_handle_request(self, monkeypatch, test_token, transport, call_params, resp):
         # Fake a response from the API.
         resp_text, resp_json, resp_status = resp
 
@@ -84,7 +84,7 @@ class TestTransport(object):
         protocol = transport.config['protocol']
         version = transport.config['version']
         headers = {
-            'authorization': 'Bearer accesstoken_54AL94jiZZQrvnfuxbSJQsImkoOHzs',
+            'authorization': "Bearer {0}".format(test_token),
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
