@@ -87,7 +87,6 @@ class Client(object):
         """Returns a `Stores` collection."""
         return Stores(self.transport)
 
-
     def followers(self, store=None):
         """Returns a `Followers` collection.
 
