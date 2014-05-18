@@ -95,7 +95,7 @@ An example (partial) response:
 ```python
 >>> print store
 Store({
-  'contact_email': u'hello@tictail.com',
+  'contact_email': u'thestartupstore@example.com',
   'country': u'SE',
   'currency': u'SEK',
   'dashboard_url': u'https://tictail.com/dashboard/store/thestartupstore',
@@ -159,10 +159,10 @@ Using the `Product` resource you can list all the visible products of a store or
 Listing products accepts four optional query parameters:
 
 - `limit` for page size
-- `before` and `after` for cursor-based pagination
+- `before` and `after` for paginating on products created before or after a product with a given id
 - `categories` for filtering products on certain categories
 
-**List 50 products after a specific id**
+**List 50 products created after the product with id '7bxv'**
 
 ```python
 from tictail import Tictail
@@ -224,7 +224,7 @@ something at least once from that store. Listing customers accepts three optiona
 query parameters:
 
 - `limit` for page size
-- `before` and `after` for cursor-based pagination
+- `before` and `after` for paginating on customers created before or after a customers with a given id
 
 **Retrieve a specific customer**
 
@@ -269,7 +269,7 @@ The `Follower` resource returns all the followers of a store. Listing followers 
 query parameters:
 
 - `limit` for page size
-- `before` and `after` for cursor-based pagination
+- `before` and `after` for paginating on followers created before or after a followers with a given id
 
 **Create a follower**
 
@@ -278,7 +278,7 @@ from tictail import Tictail
 
 client = Tictail('<access_token>')
 store = client.me()
-follower = store.followers.create({'email': 'sve@rige.com'})
+follower = store.followers.create({'email': 'newfollower@example.com'})
 ```
 
 **Delete a follower**
@@ -329,8 +329,8 @@ of the store then use the `Customer` resource instead. Listing orders accepts
 five optional query parameters:
 
 - `limit` for page size
-- `before` and `after` for cursor-based pagination
-- `modified_before` and `modified_after` for date-based pagination (the date
+- `before` and `after` for for paginating on orders created before or after a orders with a given id
+- `modified_before` and `modified_after` for paginating on orders modified before or after a given date (the date
   can be either a string in `ISO 8601` format or a `datetime` object)
 
 **List all orders after a specific id**
