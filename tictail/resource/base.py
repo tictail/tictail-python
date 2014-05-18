@@ -22,9 +22,9 @@ def transform_attr_value(attr, value):
     """Transforms the value of the given attribute to a different representation
     For example, `modified_at` will be transformed to a `datetime` object.
 
-    If a transformation cannot be found, then we apply the following algorithm:
-
-    (1) If `value` is a list, we apply this function on each element in the list.the original value is returned.
+    If a transformation cannot be found, and `value` is a list or a dict we
+    apply this function recursively to transform nested keys. Otherwise, the
+    original value is returned.
 
     :param attr: The attribute to transform.
     :param value: The value of the attribute to transform.
