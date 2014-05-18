@@ -233,7 +233,7 @@ from tictail import Tictail
 
 client = Tictail('<access_token>')
 store = client.me()
-customer = store.customers.get(7)
+customer = store.customers.get('7')
 ```
 
 **List all customers**
@@ -269,7 +269,7 @@ The `Follower` resource returns all the followers of a store. Listing followers 
 query parameters:
 
 - `limit` for page size
-- `before` and `after` for paginating on followers created before or after a followers with a given id
+- `before` and `after` for paginating on followers created before or after a follower with a given id
 
 **Create a follower**
 
@@ -306,6 +306,16 @@ from tictail import Tictail
 client = Tictail('<access_token>')
 store = client.me()
 followers = store.followers.all()
+```
+
+**List all followers created before the follower with id '7aN'**
+
+```python
+from tictail import Tictail
+
+client = Tictail('<access_token>')
+store = client.me()
+followers = store.followers.all(before='7aN')
 ```
 
 An example response:
