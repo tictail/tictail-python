@@ -36,8 +36,5 @@ setup(
     download_url='https://github.com/tictail/tictail-python/releases',
     description='Python bindings for the Tictail API',
     keywords=['tictail', 'rest', 'api'],
-    requires=requires,
-    long_description="""
-    TODO
-    """,
+    requires=requires
 )
