@@ -6,6 +6,65 @@ Definitions for `Resource` and `Collection` with their corresponding capability
 mixins.
 
 """
+from dateutil.parser import parse
+
+
+def parse_datetime(iso8601_string):
+    """Parses an ISO 8601 datetime string and returns `datetime.datetime` object.
+
+    :param iso8601_string: The string to parse.
+
+    """
+    return parse(iso8601_string)
+
+
+def transform_attr_value(attr, value):
+    """Transforms the value of the given attribute to a different representation
+    For example, `modified_at` will be transformed to a `datetime` object.
+
+    If a transformation cannot be found, then we apply the following algorithm:
+
+    (1) If `value` is a list, we apply this function on each element in the list.the original value is returned.
+
+    :param attr: The attribute to transform.
+    :param value: The value of the attribute to transform.
+
+    """
+    transforms = {
+        'modified_at': parse_datetime,
+        'created_at': parse_datetime
+    }
+
+    def _transform_dict(value):
+        transformed = {}
+        for key, nested_value in value.iteritems():
+            transformed[key] = transform_attr_value(key, nested_value)
+        return transformed
+
+    if value is None:
+        return value
+
+    transform = transforms.get(attr)
+
+    if transform:
+        # If we've found a transform at this level then return the transformed
+        # value.
+        transformed = transform(value)
+    else:
+        # Otherwise, if this is a dict or a list of dicts, we recursively apply
+        # the function in an attempt to transform nested keys.
+        if isinstance(value, dict):
+            transformed = _transform_dict(value)
+        elif isinstance(value, list):
+            try:
+                transformed = map(_transform_dict, value)
+            except (AttributeError, TypeError):
+                transformed = value
+        else:
+            transformed = value
+
+    return transformed
+
 
 class ApiObject(object):
     def __init__(self, transport, parent=None):
@@ -105,9 +164,10 @@ class Resource(ApiObject):
         self.instantiate_subresources()
 
     def __setattr__(self, k, v):
-        super(Resource, self).__setattr__(k, v)
         if k not in self._internal_attrs:
             self._data_keys.add(k)
+            v = transform_attr_value(k, v)
+        super(Resource, self).__setattr__(k, v)
 
     @property
     def pk(self):

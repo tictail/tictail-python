@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import pytest
 from mock import MagicMock
 
@@ -10,7 +12,8 @@ from tictail.resource.base import (ApiObject,
                                    List,
                                    Create,
                                    Delete,
-                                   DeleteById)
+                                   DeleteById,
+                                   transform_attr_value)
 
 
 class MockResource(Resource):
@@ -19,6 +22,84 @@ class MockResource(Resource):
 
 class MockCollection(Collection):
     resource = MockResource
+
+
+class TestTransforms(object):
+    def test_transform_attr_value_simple(self):
+        assert transform_attr_value('foo', 'bar') == 'bar'
+
+        isodate = '2012-05-01T00:47:16'
+        expected = datetime(2012, 5, 1, 0, 47, 16)
+
+        assert transform_attr_value('created_at', isodate) == expected
+        assert transform_attr_value('modified_at', isodate) == expected
+        assert transform_attr_value('modified_at', None) is None
+
+    def test_transform_attr_value_list_of_simple(self):
+        value = ['foo', 'bar']
+        assert transform_attr_value('foo', value) == value
+
+    def test_transform_attr_value_dict(self):
+        simple_dict = {
+            'foo': 'bar',
+            'created_at': '2012-05-01T00:47:16',
+            'modified_at': '2012-05-01T00:47:16'
+        }
+
+        transformed = {
+            'foo': 'bar',
+            'created_at': datetime(2012, 5, 1, 0, 47, 16),
+            'modified_at': datetime(2012, 5, 1, 0, 47, 16)
+        }
+
+        assert transform_attr_value('foo', simple_dict) == transformed
+
+        nested_dict = {
+            'foo': {
+                'created_at': '2012-05-01T00:47:16',
+                'modified_at': '2012-05-01T00:47:16'
+            }
+        }
+
+        transformed = {
+            'foo': {
+                'created_at': datetime(2012, 5, 1, 0, 47, 16),
+                'modified_at': datetime(2012, 5, 1, 0, 47, 16)
+            }
+        }
+
+        assert transform_attr_value('foo', nested_dict) == transformed
+
+    def test_transform_attr_value_list_of_dicts(self):
+        list_of_dicts = [{
+            'foo': 'bar',
+            'created_at': '2012-05-01T00:47:16',
+            'modified_at': '2012-05-01T00:47:16'
+        }]
+
+        transformed = [{
+            'foo': 'bar',
+            'created_at': datetime(2012, 5, 1, 0, 47, 16),
+            'modified_at': datetime(2012, 5, 1, 0, 47, 16)
+        }]
+
+        assert transform_attr_value('foo', list_of_dicts) == transformed
+
+        list_of_nested_dicts = [{
+            'foo': {
+                'created_at': '2012-05-01T00:47:16',
+                'modified_at': '2012-05-01T00:47:16'
+            }
+        }]
+
+        transformed = [{
+            'foo': {
+                'created_at': datetime(2012, 5, 1, 0, 47, 16),
+                'modified_at': datetime(2012, 5, 1, 0, 47, 16)
+            }
+        }]
+
+        assert transform_attr_value('foo', list_of_nested_dicts) == transformed
 
 
 class TestApiObject(object):
@@ -96,10 +177,37 @@ class TestResource(object):
         data, parent = input
         exp_keys, exp_parent = expected
         instance = MockResource(transport, data=data, parent=parent)
+
         assert instance._data_keys == set(exp_keys)
         assert instance.parent == exp_parent
+
         for k, v in (data or {}).items():
             assert getattr(instance, k) == v
+
+    def test_constructor_with_transformations(self, transport):
+        data = {
+            'foo': 'bar',
+            'created_at': '2012-05-01T00:47:16',
+            'modified_at': '2012-05-01T00:47:16',
+            'nested_list': [{
+                'created_at': '2012-05-01T00:47:16',
+                'nested_object': {
+                    'modified_at': '2012-05-01T00:47:16'
+                }
+            }]
+        }
+
+        instance = MockResource(transport, data=data, parent='/parent')
+
+        assert instance.foo == 'bar'
+        assert instance.created_at == datetime(2012, 5, 1, 0, 47, 16)
+        assert instance.modified_at == datetime(2012, 5, 1, 0, 47, 16)
+        assert instance.nested_list == [{
+            'created_at': datetime(2012, 5, 1, 0, 47, 16),
+            'nested_object': {
+                'modified_at': datetime(2012, 5, 1, 0, 47, 16)
+            }
+        }]
 
     def test_construction_with_subresources(self, transport):
         # Use a collection and a resource as subresources.

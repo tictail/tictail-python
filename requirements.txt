@@ -1,4 +1,5 @@
-requests==2.2.1
+requests>=2.2.1
+python-dateutil>=2.2
 pyasn1==0.1.6
 pyOpenSSL==0.13
 ndg-httpsclient==0.3.2
