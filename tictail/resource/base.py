@@ -10,7 +10,7 @@ from dateutil.parser import parse
 
 
 def parse_datetime(iso8601_string):
-    """Parses an ISO 8601 datetime string and returns `datetime.datetime` object.
+    """Parses an ISO 8601 datetime string and returns a `datetime.datetime`.
 
     :param iso8601_string: The string to parse.
 
@@ -116,18 +116,6 @@ class ApiObject(object):
 class Resource(ApiObject):
     """Describes an API resource."""
 
-    # A set of attributes that should not be included in this instance's data.
-    # Note: `transport` is inherited from `ApiObject`.
-    _internal_attrs = set([
-        'transport',
-        'parent',
-        'subresources',
-        'identifier',
-        '_data_keys',
-        'singleton',
-        'endpoint'
-    ])
-
     # A list of `Resource` objects, that will be instantiated as subresources.
     subresources = []
 
@@ -150,7 +138,7 @@ class Resource(ApiObject):
         resource's uri.
 
         """
-        self._data_keys = set()
+        self._data = dict()
         self.parent = parent
 
         super(Resource, self).__init__(transport)
@@ -159,15 +147,39 @@ class Resource(ApiObject):
             data = {}
 
         for k, v in data.iteritems():
-            setattr(self, k, v)
+            self[k] = v
 
         self.instantiate_subresources()
 
+    def __getitem__(self, k):
+        return self._data[k]
+
+    def __setitem__(self, k, v):
+        v = transform_attr_value(k, v)
+        self._data[k] = v
+
+    def __delitem__(self, k):
+        raise TypeError('Deleting properties is not supported.')
+
+    def __getattr__(self, k):
+        try:
+            return self[k]
+        except KeyError:
+            raise AttributeError(k)
+
     def __setattr__(self, k, v):
-        if k not in self._internal_attrs:
-            self._data_keys.add(k)
-            v = transform_attr_value(k, v)
-        super(Resource, self).__setattr__(k, v)
+        if k == '_data' or k not in self._data:
+            super(Resource, self).__setattr__(k, v)
+        else:
+            self[k] = v
+
+    def __delattr__(self, k):
+        self.__delitem__(k)
+
+    def __repr__(self):
+        import pprint
+        name = self.__class__.__name__
+        return "{0}({1})".format(name, pprint.pformat(self.to_dict()))
 
     @property
     def pk(self):
@@ -198,7 +210,6 @@ class Resource(ApiObject):
         """Instantiates all subresources which are attached as properties."""
         for sub in self.subresources:
             inst = sub(self.transport, parent=self.uri)
-            self._internal_attrs.add(inst.attr_name)
             setattr(self, inst.attr_name, inst)
 
     def instantiate_from_data(self, data):
@@ -210,22 +221,16 @@ class Resource(ApiObject):
         return self.__class__(self.transport, data=data, parent=self.parent)
 
     def data_keys(self):
-        return list(self._data_keys)
+        return self._data.keys()
 
     def data_values(self):
-        return [getattr(self, k) for k in self.data_keys()]
+        return self._data.values()
 
     def data_items(self):
-        return zip(self.data_keys(), self.data_values())
+        return self._data.items()
 
     def to_dict(self):
-        items = list(self.data_items())
-        return dict(items)
-
-    def __repr__(self):
-        import pprint
-        name = self.__class__.__name__
-        return "{0}({1})".format(name, pprint.pformat(self.to_dict()))
+        return self._data
 
 
 class Collection(ApiObject):

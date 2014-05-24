@@ -169,20 +169,48 @@ class TestCollection(object):
 class TestResource(object):
 
     @pytest.mark.parametrize('input,expected', [
-        (({}, 'parent'), ([], 'parent')),
-        ((None, 'parent'), ([], 'parent')),
-        (({'foo': 'bar'}, '/parent'), (['foo'], '/parent'))
+        (({}, 'parent'), ({}, 'parent')),
+        ((None, 'parent'), ({}, 'parent')),
+        (({'foo': 'bar'}, '/parent'), ({'foo': 'bar'}, '/parent'))
     ])
     def test_construction(self, transport, input, expected):
         data, parent = input
-        exp_keys, exp_parent = expected
+        exp_data, exp_parent = expected
         instance = MockResource(transport, data=data, parent=parent)
 
-        assert instance._data_keys == set(exp_keys)
+        assert instance._data == exp_data
         assert instance.parent == exp_parent
 
         for k, v in (data or {}).items():
             assert getattr(instance, k) == v
+            assert instance[k] == v
+
+    def test_property_set_get(self, transport):
+        data = {
+            'id': 1,
+            'nested': {
+                'foo': 'bar'
+            }
+        }
+        instance = MockResource(transport, data=data, parent='/parent')
+
+        # Test constructor data properties.
+        assert instance.id == 1
+        assert instance['id'] == 1
+        assert instance.nested == {'foo': 'bar'}
+        assert instance['nested'] == {'foo': 'bar'}
+
+        # Test instance properties.
+        assert instance.uri == '/parent/mocks/1'
+        with pytest.raises(KeyError):
+            assert instance['uri']
+        with pytest.raises(AttributeError):
+            assert instance.unknown
+
+        # Set and get data properties.
+        instance['baz'] = 2
+        assert instance.baz == 2
+        assert instance['baz'] == 2
 
     def test_constructor_with_transformations(self, transport):
         data = {
@@ -226,19 +254,16 @@ class TestResource(object):
         assert isinstance(instance.comment, Comment)
 
         # Check that all other properties are correct.
-        assert instance._data_keys == set(['id'])
+        assert instance._data == {'id': 1}
         assert instance.parent == 'parent'
         for k, v in data.items():
             assert getattr(instance, k) == v
 
-        # Check that the subresources are included in the internal attributes.
-        assert 'posts' in instance._internal_attrs
-        assert 'comment' in instance._internal_attrs
-
-        # Check that we are not exposing any internal attributes.
-        to_dict = instance.to_dict()
-        for attr in instance._internal_attrs:
-            assert attr not in to_dict
+        # Check that the subresources are not included in the data.
+        with pytest.raises(KeyError):
+            assert instance['posts']
+        with pytest.raises(KeyError):
+            assert instance['comment']
 
     @pytest.mark.parametrize('input,expected', [
         (('parent', False), '/parent/mocks/1'),
