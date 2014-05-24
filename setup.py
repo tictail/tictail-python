@@ -8,7 +8,7 @@ with open('requirements.txt') as fd:
 
 
 with open('tictail/version.py') as fd:
-    version = fd.read().split('=')[1].strip()
+    version = fd.read().split('=')[1].replace("'", '').strip()
 
 
 with open('README.md') as fd:
