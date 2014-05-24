@@ -1,5 +1,9 @@
 *.py[co]
+*.egg
 .DS_Store
 build
-__pycache__
+dist
+MANIFEST
 .coverage
+tictail.egg-info
+__pycache__

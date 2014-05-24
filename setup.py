@@ -1,28 +1,18 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
-
-
-OPERATORS = ('<', '>', '==', '<=', '>=', '!=')
-
-
-def _format_requirement(req):
-    for op in OPERATORS:
-        tokens = map(str.strip, req.split(op))
-        if len(tokens) == 2:
-            break
-    else:
-        return req
-    name, version = tokens
-    return '%s (%s%s)' % (name, op, version)
+from setuptools import setup
 
 
 with open('requirements.txt') as fd:
-    requires = map(_format_requirement, fd.read().split())
+    requirements = fd.readlines()
 
 
 with open('tictail/version.py') as fd:
     version = fd.read().split('=')[1].strip()
+
+
+with open('README.md') as fd:
+    long_description = fd.read()
 
 
 setup(
@@ -36,5 +26,16 @@ setup(
     download_url='https://github.com/tictail/tictail-python/releases',
     description='Python bindings for the Tictail API',
     keywords=['tictail', 'rest', 'api'],
-    requires=requires
+    install_requires=requirements,
+    long_description=long_description,
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.6",
+        "Topic :: Software Development :: Libraries",
+    ]
 )
