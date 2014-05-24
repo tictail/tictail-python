@@ -10,13 +10,29 @@ Python bindings for the Tictail API ([API reference](https://tictail.com/develop
 The easiest way to install `tictail-python` is via `pip`:
 
 ```shell
-pip install tictail
+$ pip install tictail
 ```
 
 Alternatively, you can download the [source](https://github.com/tictail/tictail-python/releases) and then run:
 
 ```shell
-python setup.py install
+$ python setup.py install
+```
+
+#### Mac OS X
+
+You might get the following error on Mac OS X:
+
+```
+clang: error: unknown argument: '-mno-fused-madd' [-Wunused-command-line-argument-hard-error-in-future]
+```
+
+This is caused by the latest (5.1) version of Xcode which ships with a compiler
+that treats unknown passed parameters as errors. The workaround is to set the
+ARCHFLAGS environment variable to treat such errors as warnings:
+
+```shell
+$ ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future pip install tictail
 ```
 
 ### Version Support
