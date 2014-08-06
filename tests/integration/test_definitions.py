@@ -173,6 +173,14 @@ class TestCategory(object):
         assert second.parent_id == first.id
 
 
+class TestInAppPurchase(object):
+
+    def test_get_all(self, client, me):
+        collection = client.in_app_purchases(store='KGu')
+        iaps = collection.all()
+        assert len(iaps) == 0
+
+
 class TestOrder(object):
 
     def test_get(self, client, me):

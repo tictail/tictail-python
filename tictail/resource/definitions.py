@@ -91,6 +91,14 @@ class Categories(Collection, List):
     resource = Category
 
 
+class InAppPurchase(Resource):
+    endpoint = 'in_app_purchases'
+
+
+class InAppPurchases(Collection, List, GetById, Create):
+    resource = InAppPurchase
+
+
 class Store(Resource, Get):
     endpoint = 'stores'
     subresources = [
@@ -100,7 +108,8 @@ class Store(Resource, Get):
         Followers,
         Orders,
         Theme,
-        Categories
+        Categories,
+        InAppPurchases
     ]
 
 
@@ -119,5 +128,5 @@ class Me(Store, Get):
 __all__ = [
     'Follower', 'Followers', 'Product', 'Products', 'Card', 'Cards',
     'Customer', 'Customers', 'Order', 'Orders', 'Theme', 'Category',
-    'Categories', 'Store', 'Stores', 'Me'
+    'Categories', 'Store', 'Stores', 'Me', 'InAppPurchases'
 ]

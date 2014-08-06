@@ -16,7 +16,8 @@ from .resource import (Store,
                        Stores,
                        Theme,
                        Categories,
-                       Me)
+                       Me,
+                       InAppPurchases)
 
 
 # API version supported by these bindings.
@@ -142,3 +143,10 @@ class Client(object):
 
         """
         return self._make_store_subresource(Categories, store)
+
+    def in_app_purchases(self, store=None):
+        """Returns a `InAppPurchases` collection.
+
+        :param store: A store id.
+        """
+        return self._make_store_subresource(InAppPurchases, store)
