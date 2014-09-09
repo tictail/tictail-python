@@ -160,12 +160,14 @@ class RequestsHttpTransport(object):
         verify_ssl_certs = self.config['verify_ssl_certs']
 
         headers = {
-            'authorization': "Bearer {0}".format(self.access_token),
             'accept': 'application/json;charset=UTF-8',
             'accept-charset': 'UTF-8',
             'content-type': 'application/json',
             'user-agent': "Tictail Python {0}".format(__version__)
         }
+
+        if self.access_token is not None:
+            headers['authorization'] = "Bearer {0}".format(self.access_token)
 
         timeout = self.config['timeout']
 

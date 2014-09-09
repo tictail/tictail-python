@@ -47,7 +47,7 @@ DEFAULT_CONFIG = {
 
 class Client(object):
 
-    def __init__(self, access_token, config=None, transport=None):
+    def __init__(self, access_token=None, config=None, transport=None):
         self.access_token = access_token
         self.config = self._make_config(config)
 
