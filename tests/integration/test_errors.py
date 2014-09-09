@@ -53,7 +53,7 @@ class TestErrors(object):
                 'status': 400,
                 'message': 'Bad Request',
                 'params': {
-                    'email': 'email is required in json'
+                    'email': 'Missing required parameter email in json'
                 },
                 'support_email': 'developers@tictail.com'
             }
