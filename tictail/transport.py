@@ -171,6 +171,7 @@ class RequestsHttpTransport(object):
 
         timeout = self.config['timeout']
 
+        resp = None
         try:
             resp = requests.request(method, abs_uri,
                                     params=params,
